@@ -170,6 +170,18 @@ export class MediaService {
     return result.map((r: any) => r.year)
   }
 
+  // 历史上的今天：与今天同月日的往年媒体（不含当年），按年份倒序
+  async getOnThisDay() {
+    const now = new Date()
+    const md = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    return this.mediaRepository
+      .createQueryBuilder('m')
+      .where(`strftime('%m-%d', m.taken_at) = :md`, { md })
+      .andWhere('m.year <> :year', { year: now.getFullYear() })
+      .orderBy('m.taken_at', 'DESC')
+      .getMany()
+  }
+
   async getMonths(year: number) {
     const result = await this.mediaRepository
       .createQueryBuilder('m')

@@ -20,6 +20,29 @@
       </router-link>
     </nav>
 
+    <!-- 历史上的今天 -->
+    <section v-if="onThisDay.length" class="on-this-day" data-reveal>
+      <div class="section-head">
+        <h2>历史上的今天</h2>
+        <span class="eyebrow">On This Day</span>
+      </div>
+      <div class="otd-grid">
+        <figure
+          v-for="(m, i) in onThisDay"
+          :key="m.id"
+          v-reveal="i * 60"
+          class="otd-item"
+          @click="goToDetail(m.id)"
+        >
+          <img :src="mediaStore.getMediaUrl(m.thumbnailPath)" :alt="m.filename" loading="lazy" />
+          <figcaption>
+            <span class="otd-ago">{{ yearsAgo(m.takenAt) }} 年前</span>
+            <span class="otd-date">{{ formatDate(m.takenAt) }}</span>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
     <!-- 最近回忆 -->
     <section class="recent">
       <div class="section-head">
@@ -66,12 +89,14 @@ import { useMediaStore } from '@/stores/media'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
+import { mediaApi } from '@/api'
 
 const mediaStore = useMediaStore()
 const authStore = useAuthStore()
 const router = useRouter()
 
 const recentMedia = ref([])
+const onThisDay = ref([])
 const notLoggedIn = ref(!authStore.isLoggedIn)
 
 const quickCards = [
@@ -84,12 +109,22 @@ const quickCards = [
 onMounted(async () => {
   if (!authStore.isLoggedIn) return
   try {
+    onThisDay.value = await mediaApi.getOnThisDay()
+  } catch {
+    onThisDay.value = []
+  }
+  try {
     await mediaStore.fetchMedia({ page: 1, limit: 20 })
     recentMedia.value = mediaStore.items
   } catch {
     recentMedia.value = []
   }
 })
+
+function yearsAgo(dateStr) {
+  if (!dateStr) return ''
+  return new Date().getFullYear() - new Date(dateStr).getFullYear()
+}
 
 function goToDetail(id) {
   router.push(`/media/${id}`)
@@ -207,6 +242,63 @@ function formatDate(dateStr) {
   color: $text-muted;
   opacity: 0;
   transition: $transition;
+}
+
+/* ===== 历史上的今天 ===== */
+.on-this-day {
+  margin-bottom: $space-7;
+}
+
+.otd-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: $space-4;
+}
+
+.otd-item {
+  position: relative;
+  border-radius: $radius-md;
+  overflow: hidden;
+  cursor: pointer;
+  aspect-ratio: 4 / 3;
+  background: $bg-light;
+  border: 1px solid $border;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s $ease-out;
+  }
+
+  &:hover img {
+    transform: scale(1.04);
+  }
+
+  figcaption {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: $space-4 $space-3 $space-3;
+    background: linear-gradient(transparent 40%, rgba(20, 18, 16, 0.66));
+    color: #fff;
+  }
+}
+
+.otd-ago {
+  font-family: $font-serif;
+  font-size: $text-xl;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.otd-date {
+  font-size: $text-xs;
+  opacity: 0.85;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
 }
 
 /* ===== 最近回忆 ===== */

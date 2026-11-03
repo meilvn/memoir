@@ -33,6 +33,11 @@ export class MediaController {
     return this.mediaService.getYears()
   }
 
+  @Get('on-this-day')
+  getOnThisDay() {
+    return this.mediaService.getOnThisDay()
+  }
+
   @Get('timeline')
   getTimeline() {
     return this.mediaService.getTimeline()

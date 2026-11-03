@@ -52,6 +52,7 @@ export const mediaApi = {
   findAll: (params) => api.get('/media', { params }),
   getOne: (id) => api.get(`/media/${id}`),
   getYears: () => api.get('/media/years'),
+  getOnThisDay: () => api.get('/media/on-this-day'),
   getTimeline: () => api.get('/media/timeline'),
   getMonths: (year) => api.get(`/media/months?year=${year}`),
   getDays: (year, month) => api.get(`/media/days?year=${year}&month=${month}`),
