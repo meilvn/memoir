@@ -153,7 +153,7 @@ async function handleRegister() {
   }
 
   h1 {
-    font-family: 'ZCOOL KuaiLe', cursive, sans-serif;
+    font-family: $font-serif;
     font-size: 1.8rem;
     margin-bottom: 4px;
   }

@@ -19,6 +19,16 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
+    const url = error.config?.url || ''
+    // 401 且不是登录/注册接口本身：清掉登录态并跳登录页
+    // （覆盖 token 过期、以及本地残留脏 token 的情况）
+    if (error.response?.status === 401 && !url.includes('/auth/')) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('auth')
+      if (location.pathname !== '/login') {
+        location.href = `/login?redirect=${encodeURIComponent(location.pathname)}`
+      }
+    }
     const msg = error.response?.data?.message || error.message || '请求失败'
     return Promise.reject(error)
   }

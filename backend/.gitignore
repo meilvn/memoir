@@ -8,3 +8,5 @@ thumbnails/*
 !thumbnails/.gitkeep
 .DS_Store
 *.log
+.seed-cache
+.playwright-cli

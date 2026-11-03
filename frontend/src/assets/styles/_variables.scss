@@ -1,0 +1,67 @@
+// ===== 设计变量（暖纸档案风 / editorial memoir）=====
+// 通过 vite.config.js 的 additionalData 自动注入到所有样式块
+
+// ----- 色彩 -----
+$primary: #C96F4A; // 陶土色：沉静的红陶土，取代高饱和橙
+$primary-light: #E09B7D;
+$primary-dark: #A85635;
+$primary-soft: rgba($primary, 0.08);
+
+$bg-warm: #FAF7F2; // 纸色背景
+$bg-light: #F2EDE4;
+$bg-card: #FFFFFF;
+$bg-ink: #2D2A26; // 深墨色（用于反白区域）
+
+$text-primary: #2D2A26;
+$text-secondary: #6B645C;
+$text-muted: #A79E93;
+
+$success: #5B9A6E;
+$error: #C05B4D;
+
+$accent-mint: #A8D8A8;
+$accent-pink: #FFD1DC;
+
+$border: #E8E0D5;
+$border-strong: #D8CCBC;
+
+// ----- 字体 -----
+$font-serif: 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', 'SimSun', serif;
+$font-sans: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+
+// ----- 字号阶 -----
+$text-xs: 0.75rem;
+$text-sm: 0.875rem;
+$text-base: 0.95rem;
+$text-lg: 1.1rem;
+$text-xl: 1.3rem;
+$text-2xl: 1.7rem;
+$text-3xl: 2.2rem;
+$text-4xl: 3rem;
+
+// ----- 间距 -----
+$space-1: 4px;
+$space-2: 8px;
+$space-3: 12px;
+$space-4: 16px;
+$space-5: 24px;
+$space-6: 32px;
+$space-7: 48px;
+$space-8: 64px;
+
+// ----- 圆角 -----
+$radius-sm: 6px;
+$radius-md: 10px;
+$radius-lg: 16px;
+$radius-xl: 24px;
+$radius-full: 999px;
+
+// ----- 阴影（轻、分层、不抢戏）-----
+$shadow-sm: 0 1px 2px rgba(45, 42, 38, 0.04), 0 1px 3px rgba(45, 42, 38, 0.05);
+$shadow-md: 0 4px 14px rgba(45, 42, 38, 0.08);
+$shadow-lg: 0 14px 36px rgba(45, 42, 38, 0.13);
+
+// ----- 动效（克制的缓动）-----
+$ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+$transition: all 0.35s $ease-out;
+$transition-fast: all 0.2s $ease-out;

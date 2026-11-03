@@ -117,7 +117,7 @@ function formatDate(dateStr) {
 }
 
 .page-title {
-  font-family: 'ZCOOL KuaiLe', cursive, sans-serif;
+  font-family: $font-serif;
   font-size: 1.8rem;
 }
 

@@ -103,7 +103,7 @@ async function handleChangePassword() {
 }
 
 .page-title {
-  font-family: 'ZCOOL KuaiLe', cursive, sans-serif;
+  font-family: $font-serif;
   font-size: 2rem;
   margin-bottom: 24px;
 }

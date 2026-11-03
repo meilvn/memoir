@@ -64,7 +64,23 @@ export class AuthService {
     })
     const saved = await this.usersRepository.save(user)
     const { passwordHash: _, ...result } = saved as any
-    return result
+    // 注册后直接签发 token，与 login 返回结构一致（前端注册即自动登录）
+    const accessToken = this.jwtService.sign({
+      sub: result.id,
+      username: result.username,
+      role: result.role,
+    })
+    return {
+      access_token: accessToken,
+      user: {
+        id: result.id,
+        username: result.username,
+        email: result.email,
+        nickname: result.nickname,
+        avatarUrl: result.avatarUrl,
+        role: result.role,
+      },
+    }
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {

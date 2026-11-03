@@ -12,6 +12,14 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        // 自动注入全局变量，各组件样式块无需手动 import
+        additionalData: `@use "@/assets/styles/variables" as *;`,
+      },
+    },
+  },
   server: {
     proxy: {
       '/api': {

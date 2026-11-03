@@ -3,7 +3,9 @@ import { ref, computed } from 'vue'
 import { authApi, usersApi } from '@/api'
 
 export const useAuthStore = defineStore('auth', () => {
-  const token = ref(localStorage.getItem('token') || '')
+  // 兼容旧版本注册 bug 残留的 "undefined" 字符串 token
+const savedToken = localStorage.getItem('token')
+const token = ref(savedToken && savedToken !== 'undefined' ? savedToken : '')
   const user = ref(null)
 
   const isLoggedIn = computed(() => !!token.value)
@@ -23,6 +25,7 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = data.access_token
     user.value = data.user
     localStorage.setItem('token', data.access_token)
+    localStorage.setItem('auth', JSON.stringify({ token: data.access_token, user: data.user }))
     return data
   }
 
