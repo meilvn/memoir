@@ -257,6 +257,7 @@ img {
   padding: $space-5;
   transition: $transition;
   box-shadow: $shadow-sm;
+  cursor: pointer;
 
   &:hover {
     border-color: $border-strong;

@@ -372,6 +372,14 @@ function goYear(year) {
   background: $bg-card;
   border: 1px solid $border;
   border-radius: $radius-md;
+  cursor: pointer;
+  transition: $transition-fast;
+
+  &:hover {
+    border-color: $border-strong;
+    box-shadow: $shadow-md;
+    transform: translateY(-2px);
+  }
 }
 
 .insight-icon {

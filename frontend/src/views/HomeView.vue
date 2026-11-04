@@ -297,6 +297,7 @@ function formatDate(dateStr) {
   background: $bg-card;
   text-decoration: none;
   color: inherit;
+  cursor: pointer;
   transform: translateY(0);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease;

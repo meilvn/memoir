@@ -1044,7 +1044,6 @@ function formatDuration(seconds) {
   border-radius: $radius-md;
   margin-bottom: $space-4;
   box-shadow: $shadow-sm;
-}
 
   .batch-count {
     font-weight: 600;
