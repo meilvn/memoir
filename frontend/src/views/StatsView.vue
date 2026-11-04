@@ -7,7 +7,7 @@
     </header>
 
     <div v-if="loading" class="stats-loading">
-      <div v-for="n in 4" :key="n" class="skeleton skeleton-tile" />
+      <SkeletonCard v-for="n in 4" :key="n" variant="default" height="108px" />
     </div>
 
     <template v-else-if="stats.total">
@@ -109,6 +109,7 @@ import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { mediaApi } from '@/api'
 import AppIcon from '@/components/AppIcon.vue'
+import SkeletonCard from '@/components/SkeletonCard.vue'
 import { countUp } from '@/directives/reveal'
 
 const router = useRouter()
@@ -202,11 +203,10 @@ function goYear(year) {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: $space-4;
-}
 
-.skeleton-tile {
-  height: 108px;
-  border-radius: $radius-md;
+  @media (max-width: 720px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* ===== 核心数字 ===== */
