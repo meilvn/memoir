@@ -10,14 +10,14 @@
 
     <!-- 快捷入口 -->
     <nav class="quick-nav" data-reveal>
-      <router-link v-for="card in quickCards" :key="card.title" :to="card.to" class="quick-item">
+      <div v-for="card in quickCards" :key="card.title" class="quick-item" @click="handleQuickCard(card)">
         <span class="quick-icon"><AppIcon :name="card.icon" :size="19" /></span>
         <span class="quick-text">
           <strong>{{ card.title }}</strong>
           <em>{{ card.desc }}</em>
         </span>
         <AppIcon name="chevronRight" :size="15" class="quick-arrow" />
-      </router-link>
+      </div>
     </nav>
 
     <!-- 历史上的今天 -->
@@ -107,6 +107,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useMediaStore } from '@/stores/media'
 import { useAuthStore } from '@/stores/auth'
 import AppIcon from '@/components/AppIcon.vue'
@@ -114,6 +115,7 @@ import Lightbox from '@/components/Lightbox.vue'
 import SkeletonCard from '@/components/SkeletonCard.vue'
 import { mediaApi } from '@/api'
 
+const router = useRouter()
 const mediaStore = useMediaStore()
 const authStore = useAuthStore()
 
@@ -133,7 +135,7 @@ const quickCards = [
   { icon: 'image', title: '回忆画廊', desc: '浏览所有照片与视频', to: '/gallery' },
   { icon: 'clock', title: '时光之旅', desc: '按年月日回溯往事', to: '/timeline' },
   { icon: 'book', title: '回忆故事', desc: '带文字备注的珍藏', to: '/stories' },
-  { icon: 'shuffle', title: '随机回忆', desc: '来一段意外的惊喜', to: '/gallery' },
+  { icon: 'shuffle', title: '随机回忆', desc: '来一段意外的惊喜', action: 'random' },
 ]
 
 onMounted(async () => {
@@ -172,6 +174,29 @@ function openRecent(i) {
   lightboxSource.value = 'recent'
   lightboxIndex.value = i
   lightboxOpen.value = true
+}
+
+function handleQuickCard(card) {
+  if (card.action === 'random') {
+    openRandomMemory()
+  } else if (card.to) {
+    router.push(card.to)
+  }
+}
+
+async function openRandomMemory() {
+  try {
+    // 利用已加载的最近回忆，若不足则补拉一页
+    const pool = recentMedia.value.length ? recentMedia.value : await mediaStore.fetchMedia({ page: 1, limit: 50 }).then(() => mediaStore.items)
+    if (pool.length) {
+      const pick = pool[Math.floor(Math.random() * pool.length)]
+      router.push(`/media/${pick.id}`)
+    } else {
+      router.push('/gallery')
+    }
+  } catch {
+    router.push('/gallery')
+  }
 }
 
 function formatDate(dateStr) {
