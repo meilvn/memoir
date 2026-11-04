@@ -31,13 +31,13 @@ const DATES = [
   ['2016', '02', '14'], ['2016', '05', '01'], ['2016', '08', '20'], ['2016', '10', '03'], ['2016', '12', '25'],
   ['2017', '01', '28'], ['2017', '04', '05'], ['2017', '07', '16'], ['2017', '09', '30'], ['2017', '11', '11'],
   ['2018', '03', '08'], ['2018', '06', '01'], ['2018', '06', '18'], ['2018', '10', '01'], ['2018', '12', '31'],
-  ['2019', '02', '05'], ['2019', '05', '12'], ['2019', '08', '08'], ['2019', '11', '28'],
-  ['2020', '01', '01'], ['2020', '04', '04'], ['2020', '07', '25'], ['2020', '10', '06'],
-  ['2021', '02', '12'], ['2021', '05', '01'], ['2021', '09', '21'], ['2021', '12', '24'],
-  ['2022', '02', '01'], ['2022', '06', '03'], ['2022', '08', '14'], ['2022', '11', '11'],
-  ['2023', '01', '22'], ['2023', '05', '03'], ['2023', '07', '30'], ['2023', '10', '23'],
-  ['2024', '02', '10'], ['2024', '04', '04'], ['2024', '06', '16'], ['2024', '09', '17'], ['2024', '12', '25'],
-  ['2025', '01', '29'], ['2025', '05', '31'], ['2025', '08', '09'], ['2025', '11', '02'],
+  ['2019', '02', '05'], ['2019', '05', '12'], ['2019', '08', '08'], ['2019', '11', '03'], ['2019', '11', '28'],
+  ['2020', '01', '01'], ['2020', '04', '04'], ['2020', '07', '25'], ['2020', '10', '06'], ['2020', '11', '04'],
+  ['2021', '02', '12'], ['2021', '05', '01'], ['2021', '09', '21'], ['2021', '11', '03'], ['2021', '12', '24'],
+  ['2022', '02', '01'], ['2022', '06', '03'], ['2022', '08', '14'], ['2022', '11', '04'], ['2022', '11', '11'],
+  ['2023', '01', '22'], ['2023', '05', '03'], ['2023', '07', '30'], ['2023', '10', '23'], ['2023', '11', '03'],
+  ['2024', '02', '10'], ['2024', '04', '04'], ['2024', '06', '16'], ['2024', '09', '17'], ['2024', '11', '04'],
+  ['2025', '01', '29'], ['2025', '05', '31'], ['2025', '08', '09'], ['2025', '11', '02'], ['2025', '11', '03'],
   ['2026', '01', '01'], ['2026', '03', '15'], ['2026', '06', '01'], ['2026', '09', '10'], ['2026', '10', '28'],
 ]
 
@@ -54,7 +54,7 @@ const EXTRA_PHOTO_DATES = ['2016/12/25', '2017/11/11', '2018/12/31', '2019/02/05
 const VIDEO_SOURCES = [
   { key: 'bbb360', url: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4', w: 640, h: 360, label: 'Big Buck Bunny 360p' },
   { key: 'bbb720', url: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4', w: 1280, h: 720, label: 'Big Buck Bunny 720p' },
-  { key: 'bbb1080', url: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_5MB.mp4', w: 1920, h: 1080, label: 'Big Buck Bunny 1080p' },
+  { key: 'jelly720', url: 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/720/Jellyfish_720_10s_1MB.mp4', w: 1280, h: 720, label: 'Jellyfish 720p' },
   { key: 'jelly360', url: 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4', w: 640, h: 360, label: 'Jellyfish 360p' },
   { key: 'sintel360', url: 'https://test-videos.co.uk/vids/sintel/mp4/h264/360/Sintel_360_10s_1MB.mp4', w: 640, h: 360, label: 'Sintel 360p' },
 ]
@@ -66,18 +66,39 @@ const dtStr = (y, m, d) => `${y}-${m}-${d} 12:00:00` // 统一存当天中午，
 const ensureDir = (dir) => { if (!existsSync(dir)) mkdirSync(dir, { recursive: true }) }
 
 // 用 curl 下载（本机 undici fetch 的连接超时不可靠，curl 的 IPv4 回退更稳），带重试
-async function download(url, dest, retries = 3) {
+async function download(url, dest, retries = 3, fallbackFrom = null) {
   if (existsSync(dest)) return dest
+  const isVideoFile = dest.endsWith('.mp4')
+  // 视频文件大，允许更长超时；图片 60s 足够
+  const maxTime = isVideoFile ? 300 : 60
+  // 最小有效体积：防止 curl 超时留下截断的半成品（mp4 至少几百 KB）
+  const minSize = isVideoFile ? 300 * 1024 : 3000
   for (let i = 1; i <= retries; i++) {
     try {
-      execFileSync('curl', ['-sL', '--max-time', '120', '-o', dest, url], { stdio: 'pipe' })
-      if (existsSync(dest) && statSync(dest).size > 0) return dest
+      if (existsSync(dest)) rmSync(dest)
+      execFileSync('curl', ['-sL', '--max-time', String(maxTime), '-o', dest, url], { stdio: 'pipe' })
+      if (existsSync(dest) && statSync(dest).size >= minSize) return dest
+      if (existsSync(dest)) rmSync(dest)
     } catch (e) {
-      // 继续重试
+      // curl 超时/失败：清掉可能的半成品后重试
+      if (existsSync(dest)) rmSync(dest)
     }
     if (i < retries) await new Promise((r) => setTimeout(r, 1500 * i))
   }
-  throw new Error(`下载失败(重试 ${retries} 次后): ${url}`)
+  // 视频下载失败：复用缓存里已有的完整视频（比生成假 mp4 更真实）
+  if (isVideoFile && fallbackFrom && existsSync(fallbackFrom) && statSync(fallbackFrom).size >= minSize) {
+    console.log(`  ⚠ 下载失败，复用已有视频: ${url.split('/').pop()} -> ${fallbackFrom.split(/[\\/]/).pop()}`)
+    copyFileSync(fallbackFrom, dest)
+    return dest
+  }
+  // 外部下载全部失败，用 sharp 生成本地占位图
+  console.log(`  ⚠ 下载失败，生成占位图: ${url.split('/').pop()}`)
+  const w = url.includes('800') ? 800 : url.includes('600') ? 600 : 400
+  const h = url.includes('800') ? 600 : url.includes('600') ? 800 : 300
+  const bg = `hsl(${Math.random() * 360 | 0}, 40%, 85%)`
+  const svg = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="100%" height="100%" fill="${bg}"/><text x="50%" y="50%" font-size="24" text-anchor="middle" dy=".3em" fill="#666">Memoir</text></svg>`)
+  await sharp(svg).jpeg({ quality: 85 }).toFile(dest)
+  return dest
 }
 
 // 视频缩略图占位图（无 ffmpeg 环境，用 SVG 生成深色播放按钮图）
@@ -164,7 +185,14 @@ async function main() {
       height = meta.height || 0
     } else {
       const v = e.video
-      srcFile = await download(v.url, join(CACHE_DIR, `${v.key}.mp4`))
+      // 视频下载失败时，复用缓存里已有的完整视频（挑一个最大的）
+      const cachedMp4s = existsSync(CACHE_DIR)
+        ? readdirSync(CACHE_DIR).filter((f) => f.endsWith('.mp4')).map((f) => join(CACHE_DIR, f))
+        : []
+      const bestCached = cachedMp4s
+        .filter((f) => statSync(f).size >= 300 * 1024)
+        .sort((a, b) => statSync(b).size - statSync(a).size)[0]
+      srcFile = await download(v.url, join(CACHE_DIR, `${v.key}.mp4`), 3, bestCached)
       ext = '.mp4'
       mime = 'video/mp4'
       width = v.w

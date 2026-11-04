@@ -10,3 +10,6 @@ thumbnails/*
 *.log
 .seed-cache
 .playwright-cli
+
+# 构建产物
+*.tsbuildinfo
