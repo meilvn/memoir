@@ -36,6 +36,14 @@
           <AppIcon name="heart" :size="15" />
           收藏
         </button>
+        <button
+          class="view-toggle"
+          :class="{ active: viewMode === 'grid' }"
+          :title="viewMode === 'masonry' ? '切换网格视图' : '切换瀑布流'"
+          @click="viewMode = viewMode === 'masonry' ? 'grid' : 'masonry'"
+        >
+          <AppIcon name="grid" :size="15" />
+        </button>
         <label class="upload-btn btn btn-primary">
           <AppIcon name="upload" :size="15" />
           上传
@@ -82,7 +90,7 @@
       <SkeletonCard v-for="n in 12" :key="n" variant="media" showText />
     </div>
 
-    <div v-else-if="items.length" class="masonry-gallery">
+    <div v-else-if="items.length" class="masonry-gallery" :class="viewMode">
       <figure
         v-for="(media, i) in items"
         :key="media.id"
@@ -156,6 +164,7 @@ const tags = ref([])
 const tagsExpanded = ref(false)
 const lightboxOpen = ref(false)
 const lightboxIndex = ref(0)
+const viewMode = ref('masonry')
 let debounceTimer = null
 
 // 标签云默认展示前 12 个，展开后全部
@@ -550,6 +559,33 @@ function formatDate(dateStr) {
   }
 }
 
+/* 视图切换 */
+.view-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid $border;
+  border-radius: $radius-full;
+  background: $bg-card;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: $transition-fast;
+
+  &:hover {
+    border-color: $primary;
+    color: $primary;
+    background: $primary-soft;
+  }
+
+  &.active {
+    background: $primary-soft;
+    border-color: $primary;
+    color: $primary;
+  }
+}
+
 /* 卡片上的收藏按钮 */
 .card-fav {
   position: absolute;
@@ -571,6 +607,31 @@ function formatDate(dateStr) {
   @media (max-width: 1200px) { columns: 3; }
   @media (max-width: 768px) { columns: 2; }
   @media (max-width: 480px) { columns: 1; }
+
+  &.grid {
+    columns: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: $space-4;
+
+    @media (max-width: 480px) {
+      grid-template-columns: 1fr;
+    }
+
+    .media-card {
+      break-inside: auto;
+      display: flex;
+      align-items: center;
+      gap: $space-4;
+
+      img {
+        width: 140px;
+        height: 140px;
+        flex-shrink: 0;
+        object-fit: cover;
+      }
+    }
+  }
 }
 
 .media-card {
