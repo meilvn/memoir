@@ -51,6 +51,7 @@ export const mediaApi = {
   },
   findAll: (params) => api.get('/media', { params }),
   getOne: (id) => api.get(`/media/${id}`),
+  toggleFavorite: (id) => api.patch(`/media/${id}/favorite`),
   getYears: () => api.get('/media/years'),
   getOnThisDay: () => api.get('/media/on-this-day'),
   getTimeline: () => api.get('/media/timeline'),

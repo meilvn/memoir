@@ -9,6 +9,14 @@
             <span class="lb-total">/ {{ items.length }}</span>
           </div>
           <div class="lb-actions">
+            <FavoriteButton
+              v-if="current"
+              v-model="current.isFavorite"
+              :media-id="current.id"
+              variant="bar"
+              class="lb-fav"
+              @change="onFavChange"
+            />
             <button class="lb-btn" :class="{ active: slideshow }" title="幻灯片播放" @click="toggleSlideshow">
               <AppIcon :name="slideshow ? 'pause' : 'play'" :size="17" />
             </button>
@@ -82,13 +90,14 @@ import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMediaStore } from '@/stores/media'
 import AppIcon from '@/components/AppIcon.vue'
+import FavoriteButton from '@/components/FavoriteButton.vue'
 
 const props = defineProps({
   items: { type: Array, default: () => [] },
   index: { type: Number, default: 0 },
   modelValue: { type: Boolean, default: false },
 })
-const emit = defineEmits(['update:modelValue', 'update:index', 'close'])
+const emit = defineEmits(['update:modelValue', 'update:index', 'close', 'favorite-change'])
 
 const router = useRouter()
 const mediaStore = useMediaStore()
@@ -173,6 +182,11 @@ function toggleSlideshow() {
   slideshow.value = !slideshow.value
   if (slideshow.value) startSlideshow()
   else stopSlideshow()
+}
+
+// 收藏状态变更：向上抛，便于父页面在"只看收藏"等筛选下刷新列表
+function onFavChange(val) {
+  emit('favorite-change', { id: current.value?.id, isFavorite: val })
 }
 
 function startSlideshow() {
@@ -260,6 +274,24 @@ function formatDate(dateStr) {
   }
 
   &.active {
+    background: $primary;
+    border-color: $primary;
+    color: #fff;
+  }
+}
+
+/* 灯箱里的收藏按钮：深色底上的描边按钮 */
+.lb-fav {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: transparent;
+  color: #f5f1ea;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  &.filled {
     background: $primary;
     border-color: $primary;
     color: #fff;

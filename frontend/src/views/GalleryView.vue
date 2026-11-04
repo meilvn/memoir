@@ -14,6 +14,15 @@
             <option value="VIDEO">视频</option>
           </select>
         </div>
+        <button
+          class="fav-filter"
+          :class="{ active: filterFav }"
+          title="只看收藏"
+          @click="filterFav = !filterFav"
+        >
+          <AppIcon name="heart" :size="15" />
+          收藏
+        </button>
         <label class="upload-btn btn btn-primary">
           <AppIcon name="upload" :size="15" />
           上传
@@ -35,6 +44,12 @@
         @click="openLightbox(i)"
       >
         <img :src="mediaStore.getMediaUrl(media.thumbnailPath)" :alt="media.filename" loading="lazy" />
+        <FavoriteButton
+          v-model="media.isFavorite"
+          :media-id="media.id"
+          variant="card"
+          class="card-fav"
+        />
         <figcaption class="card-overlay">
           <span class="type-badge">
             <AppIcon :name="media.mediaType === 'VIDEO' ? 'film' : 'image'" :size="13" />
@@ -46,13 +61,14 @@
     </div>
 
     <div v-else class="empty-state">
-      <div class="empty-icon"><AppIcon name="image" :size="26" /></div>
-      <p>画廊还没有照片呢</p>
-      <label class="btn btn-primary">
+      <div class="empty-icon"><AppIcon :name="filterFav ? 'heart' : 'image'" :size="26" /></div>
+      <p>{{ filterFav ? '还没有收藏任何回忆，点心形标记珍藏喜欢的瞬间' : '画廊还没有照片呢' }}</p>
+      <label v-if="!filterFav" class="btn btn-primary">
         <AppIcon name="upload" :size="15" />
         上传第一张照片
         <input type="file" accept="image/*,video/*" multiple @change="handleUpload" hidden />
       </label>
+      <button v-else class="btn btn-secondary" @click="filterFav = false">查看全部回忆</button>
     </div>
 
     <Lightbox
@@ -60,6 +76,7 @@
       v-model:index="lightboxIndex"
       :items="items"
       @close="lightboxOpen = false"
+      @favorite-change="onLightboxFavChange"
     />
   </div>
 </template>
@@ -71,6 +88,7 @@ import { mediaApi } from '@/api'
 import { useToast } from 'vue-toastification'
 import AppIcon from '@/components/AppIcon.vue'
 import Lightbox from '@/components/Lightbox.vue'
+import FavoriteButton from '@/components/FavoriteButton.vue'
 
 const mediaStore = useMediaStore()
 const toast = useToast()
@@ -78,6 +96,7 @@ const toast = useToast()
 const items = ref([])
 const loading = ref(false)
 const filterType = ref('')
+const filterFav = ref(false)
 const lightboxOpen = ref(false)
 const lightboxIndex = ref(0)
 
@@ -85,14 +104,18 @@ onMounted(async () => {
   await loadMedia()
 })
 
-watch(filterType, async () => {
+watch([filterType, filterFav], async () => {
   await loadMedia()
 })
 
 async function loadMedia() {
   loading.value = true
   try {
-    const data = await mediaApi.findAll({ mediaType: filterType.value || undefined, limit: 100 })
+    const data = await mediaApi.findAll({
+      mediaType: filterType.value || undefined,
+      favorite: filterFav.value || undefined,
+      limit: 100,
+    })
     items.value = data.items
   } catch {
     toast.error('加载失败')
@@ -120,6 +143,13 @@ async function handleUpload(e) {
 function openLightbox(i) {
   lightboxIndex.value = i
   lightboxOpen.value = true
+}
+
+// 灯箱里改了收藏状态：若正处于"只看收藏"，取消收藏的项要消失——
+// 先关灯箱（否则列表刷新后当前项失效），再重新拉取
+async function onLightboxFavChange({ isFavorite }) {
+  if (filterFav.value && !isFavorite) lightboxOpen.value = false
+  if (filterFav.value) await loadMedia()
 }
 
 function formatDate(dateStr) {
@@ -196,6 +226,51 @@ function formatDate(dateStr) {
   &:focus {
     outline: none;
     border-color: $primary;
+  }
+}
+
+/* 只看收藏筛选 */
+.fav-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px $space-4;
+  border: 1px solid $border;
+  border-radius: $radius-full;
+  background: $bg-card;
+  color: $text-secondary;
+  font-size: $text-sm;
+  font-family: inherit;
+  cursor: pointer;
+  transition: $transition-fast;
+
+  &:hover {
+    border-color: $primary;
+    color: $primary;
+  }
+
+  &.active {
+    background: $primary;
+    border-color: $primary;
+    color: #fff;
+
+    :deep(.app-icon path) {
+      fill: currentColor;
+    }
+  }
+}
+
+/* 卡片上的收藏按钮 */
+.card-fav {
+  position: absolute;
+  top: $space-2;
+  right: $space-2;
+  z-index: 2;
+  opacity: 0;
+
+  .media-card:hover &,
+  &.filled {
+    opacity: 1;
   }
 }
 

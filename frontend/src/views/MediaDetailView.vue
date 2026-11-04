@@ -14,7 +14,10 @@
           </p>
           <h1 class="serif">{{ formatDate(media.takenAt) }}</h1>
         </div>
-        <span class="media-date">{{ media.filename }}</span>
+        <div class="info-side">
+          <span class="media-date">{{ media.filename }}</span>
+          <FavoriteButton v-model="media.isFavorite" :media-id="media.id" variant="bar" />
+        </div>
       </div>
 
       <div class="note-section">
@@ -63,6 +66,7 @@ import { useMediaStore } from '@/stores/media'
 import { notesApi, mediaApi } from '@/api'
 import { useToast } from 'vue-toastification'
 import AppIcon from '@/components/AppIcon.vue'
+import FavoriteButton from '@/components/FavoriteButton.vue'
 
 const route = useRoute()
 const mediaStore = useMediaStore()
@@ -168,6 +172,13 @@ function formatDate(dateStr) {
     letter-spacing: 0.04em;
     word-break: break-all;
   }
+}
+
+.info-side {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  flex-shrink: 0;
 }
 
 .eyebrow {

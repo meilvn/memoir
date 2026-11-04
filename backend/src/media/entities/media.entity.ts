@@ -36,6 +36,10 @@ export class Media {
   @Column({ name: 'taken_at', type: 'datetime' })
   takenAt: Date
 
+  // 是否收藏（心形标记，家庭相册的"珍藏"）
+  @Column({ name: 'is_favorite', type: 'boolean', default: false })
+  isFavorite: boolean
+
   @Column({ type: 'int' })
   year: number
 

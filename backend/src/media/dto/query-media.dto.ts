@@ -1,5 +1,5 @@
-import { Type } from 'class-transformer'
-import { IsOptional, IsInt, IsString, IsEnum, Min, Max } from 'class-validator'
+import { Type, Transform } from 'class-transformer'
+import { IsOptional, IsInt, IsString, IsEnum, IsBoolean, Min, Max } from 'class-validator'
 
 export class QueryMediaDto {
   @IsOptional()
@@ -25,6 +25,12 @@ export class QueryMediaDto {
   @IsOptional()
   @IsEnum(['PHOTO', 'VIDEO'])
   mediaType?: 'PHOTO' | 'VIDEO'
+
+  // 只看收藏：传 true 时仅返回 is_favorite = 1 的媒体
+  @IsOptional()
+  @Transform(({ value }) => value === true || value === 'true' || value === '1')
+  @IsBoolean()
+  favorite?: boolean
 
   @IsOptional()
   @IsString()

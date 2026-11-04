@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
   Param,
   Delete,
   UploadedFile,
@@ -46,6 +47,12 @@ export class MediaController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.mediaService.findOne(id)
+  }
+
+  // 收藏/取消收藏（切换）
+  @Patch(':id/favorite')
+  toggleFavorite(@Param('id') id: string) {
+    return this.mediaService.toggleFavorite(id)
   }
 
   @Delete(':id')

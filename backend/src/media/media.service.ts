@@ -136,6 +136,7 @@ export class MediaService {
     if (dto.month) qb.andWhere('m.month = :month', { month: dto.month })
     if (dto.day) qb.andWhere('m.day = :day', { day: dto.day })
     if (dto.mediaType) qb.andWhere('m.media_type = :mediaType', { mediaType: dto.mediaType })
+    if (dto.favorite) qb.andWhere('m.is_favorite = 1')
 
     const page = dto.page || 1
     const limit = dto.limit || 30
@@ -143,6 +144,14 @@ export class MediaService {
 
     const [items, total] = await qb.getManyAndCount()
     return { items, total, page, limit, totalPages: Math.ceil(total / limit) }
+  }
+
+  // 收藏/取消收藏：切换布尔值并返回最新状态
+  async toggleFavorite(id: string) {
+    const media = await this.findOne(id)
+    media.isFavorite = !media.isFavorite
+    const saved = await this.mediaRepository.save(media)
+    return { id: saved.id, isFavorite: saved.isFavorite }
   }
 
   async findOne(id: string) {
