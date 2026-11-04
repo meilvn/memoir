@@ -6,6 +6,19 @@
         <h1 class="page-title serif">回忆画廊</h1>
       </div>
       <div class="gallery-controls">
+        <div class="search-box">
+          <AppIcon name="search" :size="15" class="search-icon" />
+          <input
+            v-model="keyword"
+            type="search"
+            class="search-input"
+            placeholder="搜索照片、备注、标签…"
+            @input="onKeywordInput"
+          />
+          <button v-if="keyword" class="search-clear" title="清空" @click="clearKeyword">
+            <AppIcon name="close" :size="13" />
+          </button>
+        </div>
         <div class="filter-group">
           <AppIcon name="filter" :size="15" class="filter-icon" />
           <select v-model="filterType" class="filter-select">
@@ -30,6 +43,11 @@
         </label>
       </div>
     </header>
+
+    <!-- 搜索结果提示条 -->
+    <div v-if="keyword && !loading" class="result-bar">
+      找到 <strong>{{ total }}</strong> 条与「{{ keyword }}」相关的回忆
+    </div>
 
     <div v-if="loading" class="loading-grid">
       <div v-for="n in 8" :key="n" class="skeleton-card skeleton" />
@@ -61,14 +79,18 @@
     </div>
 
     <div v-else class="empty-state">
-      <div class="empty-icon"><AppIcon :name="filterFav ? 'heart' : 'image'" :size="26" /></div>
-      <p>{{ filterFav ? '还没有收藏任何回忆，点心形标记珍藏喜欢的瞬间' : '画廊还没有照片呢' }}</p>
-      <label v-if="!filterFav" class="btn btn-primary">
+      <div class="empty-icon">
+        <AppIcon :name="keyword ? 'search' : filterFav ? 'heart' : 'image'" :size="26" />
+      </div>
+      <p v-if="keyword">没有找到与「{{ keyword }}」相关的回忆，换个词试试</p>
+      <p v-else-if="filterFav">还没有收藏任何回忆，点心形标记珍藏喜欢的瞬间</p>
+      <p v-else>画廊还没有照片呢</p>
+      <button v-if="keyword || filterFav" class="btn btn-secondary" @click="resetFilters">查看全部回忆</button>
+      <label v-else class="btn btn-primary">
         <AppIcon name="upload" :size="15" />
         上传第一张照片
         <input type="file" accept="image/*,video/*" multiple @change="handleUpload" hidden />
       </label>
-      <button v-else class="btn btn-secondary" @click="filterFav = false">查看全部回忆</button>
     </div>
 
     <Lightbox
@@ -82,7 +104,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useMediaStore } from '@/stores/media'
 import { mediaApi } from '@/api'
 import { useToast } from 'vue-toastification'
@@ -95,18 +117,43 @@ const toast = useToast()
 
 const items = ref([])
 const loading = ref(false)
+const total = ref(0)
 const filterType = ref('')
 const filterFav = ref(false)
+const keyword = ref('')
 const lightboxOpen = ref(false)
 const lightboxIndex = ref(0)
+let debounceTimer = null
 
 onMounted(async () => {
   await loadMedia()
 })
 
+onBeforeUnmount(() => {
+  if (debounceTimer) clearTimeout(debounceTimer)
+})
+
 watch([filterType, filterFav], async () => {
   await loadMedia()
 })
+
+// 搜索输入防抖：停止输入 300ms 后再请求，避免每敲一个字都打接口
+function onKeywordInput() {
+  if (debounceTimer) clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => loadMedia(), 300)
+}
+
+function clearKeyword() {
+  keyword.value = ''
+  loadMedia()
+}
+
+function resetFilters() {
+  keyword.value = ''
+  filterType.value = ''
+  filterFav.value = false
+  loadMedia()
+}
 
 async function loadMedia() {
   loading.value = true
@@ -114,9 +161,11 @@ async function loadMedia() {
     const data = await mediaApi.findAll({
       mediaType: filterType.value || undefined,
       favorite: filterFav.value || undefined,
+      keyword: keyword.value.trim() || undefined,
       limit: 100,
     })
     items.value = data.items
+    total.value = data.total
   } catch {
     toast.error('加载失败')
   } finally {
@@ -192,6 +241,90 @@ function formatDate(dateStr) {
   display: flex;
   gap: $space-3;
   align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ===== 搜索框 ===== */
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 14px;
+  color: $text-muted;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 220px;
+  padding: 9px 34px 9px 36px;
+  border: 1px solid $border;
+  border-radius: $radius-full;
+  background: $bg-card;
+  color: $text-primary;
+  font-size: $text-sm;
+  font-family: inherit;
+  transition: $transition-fast;
+  appearance: none;
+
+  &::placeholder {
+    color: $text-muted;
+  }
+
+  &:hover {
+    border-color: $border-strong;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $primary;
+    width: 260px;
+  }
+
+  /* 去掉浏览器原生 search 的清除按钮（用我们自己的） */
+  &::-webkit-search-cancel-button {
+    display: none;
+  }
+}
+
+.search-clear {
+  position: absolute;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: $radius-full;
+  background: $bg-light;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: $transition-fast;
+
+  &:hover {
+    background: $border-strong;
+    color: $text-primary;
+  }
+}
+
+/* ===== 搜索结果提示 ===== */
+.result-bar {
+  margin-bottom: $space-4;
+  padding: $space-2 $space-4;
+  border-left: 2px solid $primary;
+  background: $primary-soft;
+  border-radius: 0 $radius-sm $radius-sm 0;
+  font-size: $text-sm;
+  color: $text-secondary;
+
+  strong {
+    color: $primary;
+    font-weight: 600;
+  }
 }
 
 .filter-group {

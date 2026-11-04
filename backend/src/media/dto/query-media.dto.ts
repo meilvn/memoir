@@ -1,5 +1,5 @@
 import { Type, Transform } from 'class-transformer'
-import { IsOptional, IsInt, IsString, IsEnum, IsBoolean, Min, Max } from 'class-validator'
+import { IsOptional, IsInt, IsString, IsEnum, IsBoolean, MaxLength, Min, Max } from 'class-validator'
 
 export class QueryMediaDto {
   @IsOptional()
@@ -31,6 +31,12 @@ export class QueryMediaDto {
   @Transform(({ value }) => value === true || value === 'true' || value === '1')
   @IsBoolean()
   favorite?: boolean
+
+  // 关键词：匹配文件名、备注内容、备注标签、心情
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  keyword?: string
 
   @IsOptional()
   @IsString()

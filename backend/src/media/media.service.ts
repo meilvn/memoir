@@ -1,6 +1,6 @@
 import { Injectable, Inject, BadRequestException, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { Repository, Brackets } from 'typeorm'
 import { createWriteStream, mkdirSync, existsSync, unlinkSync, copyFileSync } from 'fs'
 import { extname, join } from 'path'
 import { randomUUID } from 'crypto'
@@ -8,6 +8,7 @@ import sharp from 'sharp'
 import exifr from 'exifr'
 import ffmpeg, { ffprobe } from 'fluent-ffmpeg'
 import { Media } from '@media/entities/media.entity'
+import { Note } from '@notes/entities/note.entity'
 import { QueryMediaDto } from '@media/dto/query-media.dto'
 
 const UPLOAD_DIR = join(process.cwd(), 'uploads')
@@ -137,6 +138,19 @@ export class MediaService {
     if (dto.day) qb.andWhere('m.day = :day', { day: dto.day })
     if (dto.mediaType) qb.andWhere('m.media_type = :mediaType', { mediaType: dto.mediaType })
     if (dto.favorite) qb.andWhere('m.is_favorite = 1')
+
+    // 关键词搜索：文件名 + 备注内容 + 备注标签 + 心情（LEFT JOIN 保证无备注的媒体也能匹配文件名）
+    if (dto.keyword?.trim()) {
+      const kw = `%${dto.keyword.trim()}%`
+      qb.leftJoin(Note, 'n', 'n.media_id = m.id').andWhere(
+        new Brackets((w) => {
+          w.where('m.filename LIKE :kw', { kw })
+            .orWhere('n.content LIKE :kw', { kw })
+            .orWhere('n.tags LIKE :kw', { kw })
+            .orWhere('n.mood LIKE :kw', { kw })
+        }),
+      )
+    }
 
     const page = dto.page || 1
     const limit = dto.limit || 30
