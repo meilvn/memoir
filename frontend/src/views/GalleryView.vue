@@ -157,6 +157,14 @@
       </figure>
     </div>
 
+    <!-- 无限滚动哨兵 -->
+    <div v-if="hasMore && !loading" ref="scrollSentinel" class="scroll-sentinel">
+      <span class="sentinel-text">加载更多…</span>
+    </div>
+    <div v-else-if="!hasMore && sortedItems.length" class="scroll-sentinel">
+      <span class="sentinel-text">— 已显示全部 —</span>
+    </div>
+
     <div v-else class="empty-state">
       <div class="empty-icon">
         <AppIcon :name="keyword ? 'search' : filterFav ? 'heart' : 'image'" :size="26" />
@@ -185,7 +193,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useMediaStore } from '@/stores/media'
 import { mediaApi, notesApi } from '@/api'
 import { useToast } from 'vue-toastification'
@@ -215,6 +223,9 @@ const deleteTarget = ref(null)
 const sortBy = ref('newest')
 const batchMode = ref(false)
 const selectedIds = ref(new Set())
+const hasMore = ref(true)
+const scrollSentinel = ref(null)
+let observer = null
 let debounceTimer = null
 
 // 标签云默认展示前 12 个，展开后全部
@@ -237,15 +248,32 @@ const sortedItems = computed(() => {
 onMounted(async () => {
   await loadMedia()
   loadTags()
+  await nextTick()
+  setupInfiniteScroll()
 })
 
 onBeforeUnmount(() => {
   if (debounceTimer) clearTimeout(debounceTimer)
+  if (observer) observer.disconnect()
 })
 
 watch([filterType, filterFav, activeTag], async () => {
-  await loadMedia()
+  await loadMedia(true)
 })
+
+// 无限滚动：底部哨兵进入视口时加载更多
+function setupInfiniteScroll() {
+  if (!scrollSentinel.value) return
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting && hasMore.value && !loading.value) {
+        loadMedia(false)
+      }
+    },
+    { rootMargin: '200px' },
+  )
+  observer.observe(scrollSentinel.value)
+}
 
 async function loadTags() {
   try {
@@ -280,18 +308,25 @@ function resetFilters() {
   loadMedia()
 }
 
-async function loadMedia() {
+async function loadMedia(reset = true) {
   loading.value = true
   try {
+    const page = reset ? 1 : (items.value.length / 100) + 1
     const data = await mediaApi.findAll({
       mediaType: filterType.value || undefined,
       favorite: filterFav.value || undefined,
       keyword: keyword.value.trim() || undefined,
       tag: activeTag.value || undefined,
+      page: reset ? 1 : page,
       limit: 100,
     })
-    items.value = data.items
+    if (reset) {
+      items.value = data.items
+    } else {
+      items.value = [...items.value, ...data.items]
+    }
     total.value = data.total
+    hasMore.value = items.value.length < total.value
   } catch {
     toast.error('加载失败')
   } finally {
@@ -885,6 +920,28 @@ function formatDuration(seconds) {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* 无限滚动哨兵 */
+.scroll-sentinel {
+  text-align: center;
+  padding: $space-6 $space-5;
+  color: $text-muted;
+  font-size: $text-sm;
+}
+
+.sentinel-text {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+
+  &::before,
+  &::after {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: $border;
+  }
 }
 
 .masonry-gallery {
