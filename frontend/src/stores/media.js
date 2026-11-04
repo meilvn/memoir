@@ -2,6 +2,10 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { mediaApi, notesApi } from '@/api'
 
+// Placeholder SVG for broken images
+const PLACEHOLDER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="#F2EDE4"/><text x="200" y="160" text-anchor="middle" fill="#A79E93" font-family="sans-serif" font-size="14">图片加载失败</text></svg>`
+export const PLACEHOLDER = `data:image/svg+xml,${encodeURIComponent(PLACEHOLDER_SVG)}`
+
 export const useMediaStore = defineStore('media', () => {
   const items = ref([])
   const years = ref([])
