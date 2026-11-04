@@ -433,7 +433,7 @@ watch(() => props.index, resetZoom)
 }
 
 @keyframes lb-in {
-  from { opacity: 0; transform: scale(0.985); }
+  from { opacity: 0; transform: scale(0.96); }
   to { opacity: 1; transform: scale(1); }
 }
 

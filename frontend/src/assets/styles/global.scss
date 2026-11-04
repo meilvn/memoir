@@ -141,11 +141,13 @@ img {
   height: 64px;
   padding: 0 $space-6;
   background: rgba($bg-card, 0.92);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid $border;
+  backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid transparent;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
   position: sticky;
   top: 0;
   z-index: 100;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
 
   .logo {
     display: flex;

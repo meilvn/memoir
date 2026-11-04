@@ -257,21 +257,24 @@ function formatDate(dateStr) {
   background: $bg-card;
   text-decoration: none;
   color: inherit;
-  transition: $transition;
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease;
 
   &:hover {
     border-color: $primary;
-    box-shadow: $shadow-md;
-    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06);
+    transform: translateY(-4px);
 
     .quick-icon {
       background: $primary;
       color: #fff;
+      transform: scale(1.05);
     }
 
     .quick-arrow {
       opacity: 1;
-      transform: translateX(2px);
+      transform: translateX(3px);
     }
   }
 }
@@ -285,7 +288,7 @@ function formatDate(dateStr) {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  transition: $transition;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease, color 0.3s ease;
 }
 
 .quick-text {

@@ -1059,14 +1059,16 @@ function formatDuration(seconds) {
   position: relative;
   background: $bg-light;
   border: 1px solid $border;
-  transition: $transition;
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.35s ease;
 
   &:hover {
-    transform: translateY(-3px);
-    box-shadow: $shadow-lg;
+    transform: translateY(-6px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
 
     img {
-      transform: scale(1.03);
+      transform: scale(1.04);
     }
 
     .card-overlay {
@@ -1077,7 +1079,12 @@ function formatDuration(seconds) {
   img {
     width: 100%;
     display: block;
-    transition: transform 0.6s $ease-out, opacity 0.2s;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s;
+  }
+
+  &.selected {
+    border-color: $primary;
+    box-shadow: 0 0 0 2px $primary-soft, 0 8px 24px rgba(0, 0, 0, 0.1);
   }
 }
 

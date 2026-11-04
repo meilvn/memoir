@@ -107,27 +107,37 @@ function formatDate(dateStr) {
   margin-bottom: $space-4;
   cursor: pointer;
   position: relative;
+  padding: $space-3;
+  border-radius: $radius-md;
+  background: $bg-card;
+  border: 1px solid $border;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease;
 
   &::before {
     content: '';
     position: absolute;
-    left: -36px;
-    top: 20px;
+    left: -42px;
+    top: 50%;
+    transform: translateY(-50%);
     width: 10px;
     height: 10px;
     border-radius: 50%;
     background: $bg-card;
     border: 2px solid $primary;
     z-index: 1;
-    transition: $transition-fast;
+    transition: all 0.3s ease;
   }
 
   &:hover {
-    transform: translateX(4px);
+    transform: translateX(6px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06);
+    border-color: $border-strong;
 
     &::before {
       background: $primary;
-      box-shadow: 0 0 0 4px rgba($primary, 0.15);
+      box-shadow: 0 0 0 5px rgba($primary, 0.15);
+      transform: translateY(-50%) scale(1.2);
     }
   }
 }
@@ -146,6 +156,7 @@ function formatDate(dateStr) {
     height: 100%;
     object-fit: cover;
     display: block;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .story-type {

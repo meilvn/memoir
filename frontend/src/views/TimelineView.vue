@@ -36,6 +36,7 @@
                 v-for="(media, i) in visibleItems(mg)"
                 :key="media.id"
                 class="timeline-media-item"
+                :style="{ animationDelay: `${i * 30}ms` }"
                 @click="openLightbox(media.id)"
               >
                 <img :src="mediaStore.getMediaUrl(media.thumbnailPath)" :alt="media.filename" loading="lazy" />
@@ -198,6 +199,17 @@ function formatDuration(seconds) {
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .timeline-page {
@@ -384,6 +396,8 @@ function formatDuration(seconds) {
   aspect-ratio: 1;
   border: 1px solid $border;
   background: $bg-light;
+  animation: fade-up 0.5s $ease-out both;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
 
   img {
     width: 100%;
@@ -392,8 +406,13 @@ function formatDuration(seconds) {
     transition: transform 0.5s $ease-out;
   }
 
-  &:hover img {
-    transform: scale(1.06);
+  &:hover {
+    border-color: $border-strong;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+    img {
+      transform: scale(1.06);
+    }
   }
 }
 

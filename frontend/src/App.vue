@@ -4,7 +4,7 @@
     <div class="app-body">
       <main class="main-content">
         <router-view v-slot="{ Component }">
-          <transition name="fade" mode="out-in">
+          <transition name="page" mode="out-in">
             <component :is="Component" />
           </transition>
         </router-view>
@@ -31,6 +31,13 @@ const showScrollTop = ref(false)
 
 function onScroll() {
   showScrollTop.value = window.scrollY > 400
+  const navbar = document.querySelector('.navbar')
+  if (navbar) {
+    navbar.style.boxShadow = window.scrollY > 10
+      ? '0 4px 20px rgba(0, 0, 0, 0.08)'
+      : '0 1px 0 rgba(0, 0, 0, 0.04)'
+    navbar.style.borderColor = window.scrollY > 10 ? 'var(--border)' : 'transparent'
+  }
 }
 
 function scrollToTop() {
@@ -47,17 +54,17 @@ onBeforeUnmount(() => {
 </script>
 
 <style>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.25s ease, transform 0.25s ease;
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.fade-enter-from {
+.page-enter-from {
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateY(12px) scale(0.995);
 }
-.fade-leave-to {
+.page-leave-to {
   opacity: 0;
-  transform: translateY(-4px);
+  transform: translateY(-8px) scale(0.995);
 }
 
 .app-body {
