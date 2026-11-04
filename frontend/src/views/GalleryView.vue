@@ -105,6 +105,9 @@
           variant="card"
           class="card-fav"
         />
+        <button class="card-delete" title="删除" @click.stop="confirmDelete(media)">
+          <AppIcon name="trash" :size="14" />
+        </button>
         <figcaption class="card-overlay">
           <span class="type-badge">
             <AppIcon :name="media.mediaType === 'VIDEO' ? 'film' : 'image'" :size="13" />
@@ -141,6 +144,8 @@
       @close="lightboxOpen = false"
       @favorite-change="onLightboxFavChange"
     />
+
+    <ConfirmDialog v-model="deleteDialogOpen" @confirm="executeDelete" />
   </div>
 </template>
 
@@ -153,6 +158,7 @@ import AppIcon from '@/components/AppIcon.vue'
 import Lightbox from '@/components/Lightbox.vue'
 import FavoriteButton from '@/components/FavoriteButton.vue'
 import SkeletonCard from '@/components/SkeletonCard.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 const mediaStore = useMediaStore()
 const toast = useToast()
@@ -169,6 +175,8 @@ const tagsExpanded = ref(false)
 const lightboxOpen = ref(false)
 const lightboxIndex = ref(0)
 const viewMode = ref('masonry')
+const deleteDialogOpen = ref(false)
+const deleteTarget = ref(null)
 let debounceTimer = null
 
 // 标签云默认展示前 12 个，展开后全部
@@ -265,6 +273,24 @@ function openLightbox(i) {
 async function onLightboxFavChange({ isFavorite }) {
   if (filterFav.value && !isFavorite) lightboxOpen.value = false
   if (filterFav.value) await loadMedia()
+}
+
+function confirmDelete(media) {
+  deleteTarget.value = media
+  deleteDialogOpen.value = true
+}
+
+async function executeDelete() {
+  if (!deleteTarget.value) return
+  try {
+    await mediaStore.removeMedia(deleteTarget.value.id)
+    toast.success('已删除')
+    await loadMedia()
+  } catch {
+    toast.error('删除失败')
+  } finally {
+    deleteTarget.value = null
+  }
 }
 
 function formatDate(dateStr) {
@@ -590,17 +616,53 @@ function formatDate(dateStr) {
   }
 }
 
-/* 卡片上的收藏按钮 */
+/* 卡片删除按钮 */
+.card-delete {
+  position: absolute;
+  top: $space-2;
+  right: $space-2;
+  z-index: 3;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(45, 42, 38, 0.7);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: $transition-fast;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    background: $error;
+  }
+
+  .media-card:hover & {
+    opacity: 1;
+  }
+}
+
+/* 收藏 + 删除按钮并排 */
 .card-fav {
   position: absolute;
   top: $space-2;
   right: $space-2;
   z-index: 2;
   opacity: 0;
+  transition: $transition-fast;
 
   .media-card:hover &,
   &.filled {
     opacity: 1;
+  }
+
+  /* 删除按钮出现时，收藏按钮左移 */
+  .media-card:hover .card-delete ~ &,
+  &.filled {
+    right: 38px;
   }
 }
 
