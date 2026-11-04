@@ -3,11 +3,11 @@
     <h1 class="page-title">📖 回忆故事墙</h1>
 
     <div v-if="loading" class="loading-state">
-      <div v-for="n in 4" :key="n" class="skeleton-card skeleton" style="height: 160px;"></div>
+      <SkeletonCard v-for="n in 5" :key="n" variant="default" showText showSubtitle height="120px" />
     </div>
 
     <div v-else-if="stories.length" class="stories-timeline">
-      <div v-for="story in stories" :key="story.id" class="story-card card" @click="goDetail(story.mediaId)">
+      <div v-for="(story, i) in stories" :key="story.id" class="story-card card" v-reveal="i * 60" @click="goDetail(story.mediaId)">
         <div class="story-thumb">
           <img :src="mediaStore.getMediaUrl(story.media?.thumbnailPath)" :alt="story.media?.filename" />
           <span class="story-type">{{ story.media?.mediaType === 'VIDEO' ? '🎬' : '📷' }}</span>
@@ -35,6 +35,7 @@ import { ref, onMounted } from 'vue'
 import { useMediaStore } from '@/stores/media'
 import { notesApi } from '@/api'
 import { useRouter } from 'vue-router'
+import SkeletonCard from '@/components/SkeletonCard.vue'
 
 const mediaStore = useMediaStore()
 const router = useRouter()
@@ -66,41 +67,68 @@ function formatDate(dateStr) {
 
 <style scoped lang="scss">
 .stories-page {
-  padding: 24px;
-  max-width: 900px;
+  padding: $space-6 $space-5 $space-8;
+  max-width: 780px;
   margin: 0 auto;
 }
 
 .page-title {
   font-family: $font-serif;
-  font-size: 2rem;
-  margin-bottom: 24px;
+  font-size: $text-3xl;
+  font-weight: 600;
+  margin-bottom: $space-6;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
 }
 
 .stories-timeline {
   position: relative;
-  padding-left: 40px;
+  padding-left: 48px;
 
   &::before {
     content: '';
     position: absolute;
-    left: 15px;
-    top: 0;
-    bottom: 0;
+    left: 18px;
+    top: 8px;
+    bottom: 8px;
     width: 2px;
-    background: linear-gradient(180deg, $primary, $primary-light);
+    background: linear-gradient(180deg, $primary, $primary-light, transparent);
+    border-radius: 2px;
   }
 }
 
 .story-card {
   display: flex;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: $space-4;
+  margin-bottom: $space-4;
   cursor: pointer;
-  animation: fadeInUp 0.4s ease-out;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: -36px;
+    top: 20px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: $bg-card;
+    border: 2px solid $primary;
+    z-index: 1;
+    transition: $transition-fast;
+  }
 
   &:hover {
     transform: translateX(4px);
+
+    &::before {
+      background: $primary;
+      box-shadow: 0 0 0 4px rgba($primary, 0.15);
+    }
   }
 }
 
@@ -111,18 +139,21 @@ function formatDate(dateStr) {
   overflow: hidden;
   flex-shrink: 0;
   position: relative;
+  border: 1px solid $border;
 
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
   }
 
   .story-type {
     position: absolute;
     top: 4px;
     right: 4px;
-    background: rgba(0,0,0,0.5);
+    background: rgba(45, 42, 38, 0.6);
+    backdrop-filter: blur(4px);
     border-radius: 50%;
     width: 24px;
     height: 24px;
@@ -135,18 +166,23 @@ function formatDate(dateStr) {
 
 .story-content {
   flex: 1;
+  min-width: 0;
 
   .story-text {
-    font-size: 0.95rem;
-    line-height: 1.7;
+    font-size: $text-base;
+    line-height: 1.75;
     color: $text-primary;
-    margin-bottom: 8px;
+    margin-bottom: $space-2;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }
 
 .story-meta {
   display: flex;
-  gap: 8px;
+  gap: $space-2;
   align-items: center;
 
   .story-mood {
@@ -154,8 +190,9 @@ function formatDate(dateStr) {
   }
 
   .story-date {
-    font-size: 0.8rem;
+    font-size: $text-xs;
     color: $text-muted;
+    letter-spacing: 0.04em;
   }
 }
 </style>

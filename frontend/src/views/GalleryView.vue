@@ -79,7 +79,7 @@
     </div>
 
     <div v-if="loading" class="loading-grid">
-      <div v-for="n in 8" :key="n" class="skeleton-card skeleton" />
+      <SkeletonCard v-for="n in 12" :key="n" variant="media" showText />
     </div>
 
     <div v-else-if="items.length" class="masonry-gallery">
@@ -140,6 +140,7 @@ import { useToast } from 'vue-toastification'
 import AppIcon from '@/components/AppIcon.vue'
 import Lightbox from '@/components/Lightbox.vue'
 import FavoriteButton from '@/components/FavoriteButton.vue'
+import SkeletonCard from '@/components/SkeletonCard.vue'
 
 const mediaStore = useMediaStore()
 const toast = useToast()
@@ -636,11 +637,6 @@ function formatDate(dateStr) {
   @media (max-width: 768px) {
     grid-template-columns: repeat(2, 1fr);
   }
-}
-
-.skeleton-card {
-  aspect-ratio: 1;
-  border-radius: $radius-md;
 }
 
 .empty-state {

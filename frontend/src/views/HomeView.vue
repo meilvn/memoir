@@ -21,7 +21,17 @@
     </nav>
 
     <!-- 历史上的今天 -->
-    <section v-if="onThisDay.length" class="on-this-day" data-reveal>
+    <section v-if="otdLoading" class="on-this-day" data-reveal>
+      <div class="section-head">
+        <h2>历史上的今天</h2>
+        <span class="eyebrow">On This Day</span>
+      </div>
+      <div class="otd-grid">
+        <SkeletonCard v-for="n in 4" :key="n" variant="media" />
+      </div>
+    </section>
+
+    <section v-else-if="onThisDay.length" class="on-this-day" data-reveal>
       <div class="section-head">
         <h2>历史上的今天</h2>
         <span class="eyebrow">On This Day</span>
@@ -52,7 +62,11 @@
         </router-link>
       </div>
 
-      <div v-if="recentMedia.length" class="recent-grid">
+      <div v-if="recentLoading" class="recent-grid">
+        <SkeletonCard v-for="n in 8" :key="n" variant="media" />
+      </div>
+
+      <div v-else-if="recentMedia.length" class="recent-grid">
         <figure
           v-for="(media, i) in recentMedia"
           :key="media.id"
@@ -97,13 +111,16 @@ import { useMediaStore } from '@/stores/media'
 import { useAuthStore } from '@/stores/auth'
 import AppIcon from '@/components/AppIcon.vue'
 import Lightbox from '@/components/Lightbox.vue'
+import SkeletonCard from '@/components/SkeletonCard.vue'
 import { mediaApi } from '@/api'
 
 const mediaStore = useMediaStore()
 const authStore = useAuthStore()
 
 const recentMedia = ref([])
+const recentLoading = ref(false)
 const onThisDay = ref([])
+const otdLoading = ref(false)
 const notLoggedIn = ref(!authStore.isLoggedIn)
 const lightboxOpen = ref(false)
 const lightboxIndex = ref(0)
@@ -121,16 +138,22 @@ const quickCards = [
 
 onMounted(async () => {
   if (!authStore.isLoggedIn) return
+  otdLoading.value = true
+  recentLoading.value = true
   try {
     onThisDay.value = await mediaApi.getOnThisDay()
   } catch {
     onThisDay.value = []
+  } finally {
+    otdLoading.value = false
   }
   try {
     await mediaStore.fetchMedia({ page: 1, limit: 20 })
     recentMedia.value = mediaStore.items
   } catch {
     recentMedia.value = []
+  } finally {
+    recentLoading.value = false
   }
 })
 
