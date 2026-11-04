@@ -82,7 +82,7 @@ const rects = computed(() => icon.value.rects || [])
 const polys = computed(() => icon.value.polys || [])
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .app-icon {
   flex-shrink: 0;
   vertical-align: middle;

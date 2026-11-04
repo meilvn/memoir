@@ -260,7 +260,7 @@ function formatDate(dateStr) {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .gallery-page {
   max-width: 1280px;
   margin: 0 auto;

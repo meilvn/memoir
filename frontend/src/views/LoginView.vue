@@ -64,7 +64,7 @@ async function handleLogin() {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .login-page {
   min-height: 100vh;
   display: flex;

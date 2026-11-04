@@ -64,7 +64,7 @@ function formatDate(dateStr) {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .stories-page {
   padding: 24px;
   max-width: 900px;

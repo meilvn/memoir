@@ -4,7 +4,7 @@
   </footer>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .footer {
   text-align: center;
   padding: 16px;

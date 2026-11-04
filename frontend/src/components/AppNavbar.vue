@@ -54,7 +54,7 @@ function handleLogout() {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .logo {
   text-decoration: none;
   color: inherit;

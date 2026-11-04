@@ -158,7 +158,7 @@ function formatDate(dateStr) {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .home {
   max-width: 1080px;
   margin: 0 auto;

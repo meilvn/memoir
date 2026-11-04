@@ -213,7 +213,7 @@ function formatDate(dateStr) {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .lightbox {
   position: fixed;
   inset: 0;

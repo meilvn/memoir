@@ -43,7 +43,7 @@ async function toggle() {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .fav-btn {
   display: inline-flex;
   align-items: center;
