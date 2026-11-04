@@ -413,6 +413,58 @@ img {
   background: $text-muted;
 }
 
+// ===== Scroll-to-top (hidden by default) =====
+.scroll-top {
+  position: fixed;
+  bottom: $space-5;
+  right: $space-5;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: $bg-card;
+  border: 1px solid $border;
+  color: $text-secondary;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: $shadow-md;
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: $transition;
+  z-index: 50;
+
+  &:hover {
+    border-color: $primary;
+    color: $primary;
+    background: $primary-soft;
+  }
+
+  &.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+}
+
+// ===== Accessibility =====
+:focus-visible {
+  outline: 2px solid $primary;
+  outline-offset: 2px;
+}
+
+// ===== Reduced motion =====
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 // ===== Responsive =====
 @media (max-width: 768px) {
   .page-container,

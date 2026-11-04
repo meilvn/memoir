@@ -4,7 +4,16 @@
       <p class="eyebrow">Timeline</p>
       <h1 class="page-title serif">时光之旅</h1>
     </header>
-    <div v-if="timeline.length" class="timeline-container">
+    <div v-if="loading" class="timeline-loading">
+      <div v-for="n in 3" :key="n" class="loading-year">
+        <div class="skeleton skeleton-year" />
+        <div class="loading-months">
+          <div v-for="m in 2" :key="m" class="skeleton skeleton-month" />
+        </div>
+      </div>
+    </div>
+
+    <div v-else-if="timeline.length" class="timeline-container">
       <div v-for="group in timelineGroups" :key="group.year" class="timeline-year">
         <div class="year-header" @click="toggleYear(group.year)">
           <span class="year-dot"></span>
@@ -70,23 +79,28 @@ const route = useRoute()
 
 const timeline = ref([])
 const allMedia = ref([])
-const expandedMonths = ref([]) // 已展开的月份，格式 "年-月"
-const expandedYears = ref([]) // 已展开的年份
+const expandedMonths = ref([])
+const expandedYears = ref([])
 const lightboxOpen = ref(false)
 const lightboxIndex = ref(0)
+const loading = ref(true)
 
 // 每个月默认显示的张数，超出部分折叠，点击"查看全部"展开
 const COLLAPSED_COUNT = 12
 
 onMounted(async () => {
-  timeline.value = await mediaStore.fetchTimeline()
-  await loadAllMedia()
-  // 支持 ?year=2019 从统计页跳转过来；默认只展开最近一年（timeline 按年份倒序）
-  const want = Number(route.query.year)
-  if (want && timeline.value.some((t) => t.year === want)) {
-    expandedYears.value = [want]
-  } else if (timeline.value.length) {
-    expandedYears.value = [timeline.value[0].year]
+  loading.value = true
+  try {
+    timeline.value = await mediaStore.fetchTimeline()
+    await loadAllMedia()
+    const want = Number(route.query.year)
+    if (want && timeline.value.some((t) => t.year === want)) {
+      expandedYears.value = [want]
+    } else if (timeline.value.length) {
+      expandedYears.value = [timeline.value[0].year]
+    }
+  } finally {
+    loading.value = false
   }
 })
 
@@ -171,6 +185,11 @@ function formatShortDate(dateStr) {
 </script>
 
 <style scoped lang="scss">
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
 .timeline-page {
   max-width: 900px;
   margin: 0 auto;
@@ -386,5 +405,43 @@ function formatShortDate(dateStr) {
 
 .empty-icon {
   color: $text-muted;
+}
+
+/* ===== 加载骨架 ===== */
+.timeline-loading {
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+  padding-left: $space-6;
+}
+
+.loading-year {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+}
+
+.loading-months {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: $space-3;
+  padding-left: $space-5;
+}
+
+.skeleton-year,
+.skeleton-month {
+  background: linear-gradient(90deg, $bg-light 25%, lighten($bg-light, 3%) 50%, $bg-light 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: $radius-sm;
+}
+
+.skeleton-year {
+  height: 36px;
+  width: 160px;
+}
+
+.skeleton-month {
+  height: 140px;
 }
 </style>
