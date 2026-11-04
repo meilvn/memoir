@@ -179,19 +179,14 @@
             :alt="media.filename"
             loading="lazy"
             :data-media-id="media.id"
-            :class="[
-              'card-img',
-              { hidden: media.mediaType === 'VIDEO' && videoHovering.has(media.id) },
-              { loaded: imageLoaded.has(media.id) }
-            ]"
+            class="card-img"
             @load="onImageLoad(media.id)"
           />
-          <div v-if="!imageLoaded.has(media.id)" class="img-shimmer" />
+          <div class="img-shimmer" />
           <video
             v-if="media.mediaType === 'VIDEO'"
             :src="mediaStore.getMediaUrl(media.originalPath)"
             :data-media-id="media.id"
-            :class="{ visible: videoHovering.has(media.id) }"
             muted
             loop
             playsinline
@@ -298,15 +293,14 @@ const deleteDialogOpen = ref(false)
 const deleteTarget = ref(null)
 const batchMode = ref(false)
 const selectedIds = ref(new Set())
-// 使用 shallowRef 避免 Set 内部变化触发不必要的重新渲染
-const videoHovering = shallowRef(new Set())
-const imageLoaded = shallowRef(new Set())
+// 完全移出响应式系统，使用普通 Map 避免任何响应式追踪
+const videoHovering = new Map() // mediaId -> boolean
+const imageLoaded = new Map() // mediaId -> boolean
 const hasMore = ref(true)
 const scrollSentinel = ref(null)
 let observer = null
 const sortBy = ref('newest')
 let debounceTimer = null
-// 节流 3D 效果更新
 let rafId = null
 
 const hasActiveFilters = computed(() => {
@@ -575,11 +569,10 @@ function confirmDelete(media) {
 }
 
 function onVideoHover(mediaId, entering) {
-  // 更新响应式数据
-  if (entering) videoHovering.value.add(mediaId)
-  else videoHovering.value.delete(mediaId)
+  // 完全非响应式，不触发任何Vue更新
+  videoHovering.set(mediaId, entering)
 
-  // 手动更新 DOM 类名，避免组件重新渲染导致 3D transform 丢失
+  // 直接操作 DOM，零延迟
   const video = document.querySelector(`video[data-media-id="${mediaId}"]`)
   if (video) {
     if (entering) {
@@ -597,17 +590,17 @@ function onVideoHover(mediaId, entering) {
 }
 
 function onImageLoad(mediaId) {
-  // 更新响应式数据（使用 shallowRef，不会触发重新渲染）
-  imageLoaded.value.add(mediaId)
+  // 完全非响应式，不触发任何Vue更新
+  imageLoaded.set(mediaId, true)
 
-  // 手动更新 DOM 类名，避免组件重新渲染导致 3D transform 丢失
+  // 手动更新 DOM，不依赖 Vue 重新渲染
   const img = document.querySelector(`img[data-media-id="${mediaId}"]`)
   if (img) {
     img.classList.add('loaded')
     // 移除 shimmer
     const shimmer = img.parentElement?.querySelector('.img-shimmer')
     if (shimmer) {
-      shimmer.style.display = 'none'
+      shimmer.remove()
     }
   }
 }
