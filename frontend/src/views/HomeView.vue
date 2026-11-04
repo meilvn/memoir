@@ -2,10 +2,12 @@
   <div class="home">
     <!-- 编辑式 Hero -->
     <header class="hero" data-reveal>
-      <p class="eyebrow">Family Memoir · 家庭回忆</p>
-      <h1 class="hero-title serif">每一张照片，<br />都是回家的路</h1>
-      <p class="hero-sub">记录温暖瞬间，留住时光故事</p>
-      <div class="hero-rule" />
+      <div class="hero-inner" :style="{ transform: `translateY(${heroParallax * -20}px)` }">
+        <p class="eyebrow">Family Memoir · 家庭回忆</p>
+        <h1 class="hero-title serif">每一张照片，<br />都是回家的路</h1>
+        <p class="hero-sub">记录温暖瞬间，留住时光故事</p>
+        <div class="hero-rule" />
+      </div>
     </header>
 
     <!-- 快捷入口 -->
@@ -131,6 +133,8 @@ const lightboxSource = ref('recent') // 'otd' | 'recent'
 // 灯箱列表随来源切换：OTD 模块打开时只浏览 OTD 的回忆
 const lightboxItems = computed(() => (lightboxSource.value === 'otd' ? onThisDay.value : recentMedia.value))
 
+const heroParallax = ref(0)
+
 const quickCards = [
   { icon: 'image', title: '回忆画廊', desc: '浏览所有照片与视频', to: '/gallery' },
   { icon: 'clock', title: '时光之旅', desc: '按年月日回溯往事', to: '/timeline' },
@@ -157,6 +161,11 @@ onMounted(async () => {
   } finally {
     recentLoading.value = false
   }
+
+  // 首页 hero 视差滚动
+  window.addEventListener('scroll', () => {
+    heroParallax.value = Math.min(window.scrollY / 300, 1)
+  }, { passive: true })
 })
 
 function yearsAgo(dateStr) {
@@ -215,6 +224,12 @@ function formatDate(dateStr) {
 /* ===== Hero ===== */
 .hero {
   padding: $space-7 0 $space-6;
+  position: relative;
+  z-index: 1;
+
+  header {
+    transition: transform 0.1s linear;
+  }
 }
 
 .hero-title {
