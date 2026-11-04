@@ -11,8 +11,8 @@
             {{ avatarText }}
           </div>
           <div class="profile-info">
-            <p class="profile-name">{{ userStore.user?.nickname || userStore.user?.username }}</p>
-            <p class="profile-email">{{ userStore.user?.email }}</p>
+            <p class="profile-name">{{ authStore.user?.nickname || authStore.user?.username || '用户' }}</p>
+            <p class="profile-email">{{ authStore.user?.email || '' }}</p>
             <span class="profile-role">{{ roleLabel }}</span>
           </div>
         </div>
@@ -111,6 +111,11 @@ onMounted(() => {
     Object.assign(prefs, saved)
   } catch {
     // ignore
+  }
+
+  // 确保用户信息已加载
+  if (!authStore.user && authStore.isLoggedIn) {
+    authStore.fetchMe().catch(() => {})
   }
 })
 
