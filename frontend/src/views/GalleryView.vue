@@ -131,8 +131,14 @@
             :src="mediaStore.getMediaUrl(media.thumbnailPath)"
             :alt="media.filename"
             loading="lazy"
-            :class="{ hidden: media.mediaType === 'VIDEO' && videoHovering.has(media.id) }"
+            :class="[
+              'card-img',
+              { hidden: media.mediaType === 'VIDEO' && videoHovering.has(media.id) },
+              { loaded: imageLoaded.has(media.id) }
+            ]"
+            @load="onImageLoad(media.id)"
           />
+          <div v-if="!imageLoaded.has(media.id)" class="img-shimmer" />
           <video
             v-if="media.mediaType === 'VIDEO'"
             :src="mediaStore.getMediaUrl(media.originalPath)"
@@ -242,6 +248,7 @@ const deleteTarget = ref(null)
 const batchMode = ref(false)
 const selectedIds = ref(new Set())
 const videoHovering = ref(new Set())
+const imageLoaded = ref(new Set())
 const hasMore = ref(true)
 const scrollSentinel = ref(null)
 let observer = null
@@ -448,6 +455,10 @@ function confirmDelete(media) {
 function onVideoHover(mediaId, entering) {
   if (entering) videoHovering.value.add(mediaId)
   else videoHovering.value.delete(mediaId)
+}
+
+function onImageLoad(mediaId) {
+  imageLoaded.value.add(mediaId)
 }
 
 async function executeDelete() {
@@ -1092,6 +1103,29 @@ function formatDuration(seconds) {
 .card-media {
   position: relative;
   overflow: hidden;
+
+  .card-img {
+    filter: blur(8px);
+    transition: filter 0.4s ease, opacity 0.25s;
+
+    &.loaded {
+      filter: blur(0);
+    }
+
+    &.hidden {
+      opacity: 0;
+    }
+  }
+
+  .img-shimmer {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, $bg-light 25%, lighten($bg-light, 2%) 50%, $bg-light 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
 
   video {
     position: absolute;
