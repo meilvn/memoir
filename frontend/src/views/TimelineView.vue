@@ -294,6 +294,16 @@ function formatDuration(seconds) {
   background: $primary;
   box-shadow: 0 0 0 4px $primary-soft;
   z-index: 1;
+  animation: pulse-dot 3s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    box-shadow: 0 0 0 4px $primary-soft;
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba($primary, 0.05), 0 0 0 12px rgba($primary, 0.02);
+  }
 }
 
 .year-title {
