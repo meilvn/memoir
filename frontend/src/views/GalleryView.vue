@@ -112,6 +112,10 @@
           </span>
           <span class="date-label">{{ formatDate(media.takenAt) }}</span>
         </figcaption>
+        <div v-if="viewMode === 'grid'" class="grid-info">
+          <p class="grid-filename">{{ media.filename }}</p>
+          <p class="grid-date">{{ formatDate(media.takenAt) }}</p>
+        </div>
       </figure>
     </div>
 
@@ -623,14 +627,46 @@ function formatDate(dateStr) {
       display: flex;
       align-items: center;
       gap: $space-4;
+      overflow: hidden;
 
       img {
         width: 140px;
         height: 140px;
         flex-shrink: 0;
         object-fit: cover;
+        border-radius: $radius-sm 0 0 $radius-sm;
+      }
+
+      .card-fav {
+        opacity: 1;
+      }
+
+      .card-overlay {
+        display: none;
       }
     }
+  }
+}
+
+.grid-info {
+  flex: 1;
+  min-width: 0;
+  padding: $space-3 $space-4 $space-3 0;
+
+  .grid-filename {
+    font-size: $text-sm;
+    font-weight: 500;
+    color: $text-primary;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .grid-date {
+    font-size: $text-xs;
+    color: $text-muted;
+    letter-spacing: 0.04em;
   }
 }
 
