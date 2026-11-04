@@ -182,6 +182,9 @@ function onKey(e) {
   else if (e.key === 'ArrowLeft') prev()
   else if (e.key === 'ArrowRight') next()
   else if (e.key === ' ') { e.preventDefault(); toggleSlideshow() }
+  else if (e.key === '+' || e.key === '=') zoomBy(0.3)
+  else if (e.key === '-') zoomBy(-0.3)
+  else if (e.key === '0') resetZoom()
 }
 
 function prev() {
@@ -310,6 +313,12 @@ function resetZoom() {
   zoomLevel.value = 1
   panX.value = 0
   panY.value = 0
+}
+
+function zoomBy(delta) {
+  if (!current.value || current.value.mediaType !== 'PHOTO') return
+  zoomLevel.value = Math.max(1, Math.min(4, zoomLevel.value + delta))
+  if (zoomLevel.value <= 1) resetZoom()
 }
 
 // 监听图片切换时重置缩放

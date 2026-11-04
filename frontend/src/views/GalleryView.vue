@@ -126,7 +126,26 @@
         :class="{ selectable: batchMode, selected: selectedIds.has(media.id) }"
         @click="batchMode ? toggleSelect(media, $event) : openLightbox(i)"
       >
-        <img :src="mediaStore.getMediaUrl(media.thumbnailPath)" :alt="media.filename" loading="lazy" />
+        <div class="card-media">
+          <img
+            :src="mediaStore.getMediaUrl(media.thumbnailPath)"
+            :alt="media.filename"
+            loading="lazy"
+            :class="{ hidden: media.mediaType === 'VIDEO' && videoHovering.has(media.id) }"
+          />
+          <video
+            v-if="media.mediaType === 'VIDEO'"
+            :src="mediaStore.getMediaUrl(media.originalPath)"
+            :class="{ visible: videoHovering.has(media.id) }"
+            muted
+            loop
+            playsinline
+            preload="none"
+            @mouseenter="onVideoHover(media.id, true)"
+            @mouseleave="onVideoHover(media.id, false)"
+            @loadeddata="$event.target.play().catch(() => {})"
+          />
+        </div>
         <div v-if="batchMode" class="card-check" @click.stop="toggleSelect(media, $event)">
           <AppIcon v-if="selectedIds.has(media.id)" name="check" :size="14" />
         </div>
@@ -222,6 +241,7 @@ const deleteDialogOpen = ref(false)
 const deleteTarget = ref(null)
 const batchMode = ref(false)
 const selectedIds = ref(new Set())
+const videoHovering = ref(new Set())
 const hasMore = ref(true)
 const scrollSentinel = ref(null)
 let observer = null
@@ -423,6 +443,11 @@ async function batchDelete() {
 function confirmDelete(media) {
   deleteTarget.value = media
   deleteDialogOpen.value = true
+}
+
+function onVideoHover(mediaId, entering) {
+  if (entering) videoHovering.value.add(mediaId)
+  else videoHovering.value.delete(mediaId)
 }
 
 async function executeDelete() {
@@ -1052,7 +1077,33 @@ function formatDuration(seconds) {
   img {
     width: 100%;
     display: block;
-    transition: transform 0.6s $ease-out;
+    transition: transform 0.6s $ease-out, opacity 0.2s;
+  }
+}
+
+/* ===== 视频悬浮预览 ===== */
+.card-media {
+  position: relative;
+  overflow: hidden;
+
+  video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+    z-index: 2;
+
+    &.visible {
+      opacity: 1;
+    }
+  }
+
+  img.hidden {
+    opacity: 0;
   }
 }
 
