@@ -1219,6 +1219,9 @@ function formatDuration(seconds) {
   transform-style: preserve-3d;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   transition: box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.35s ease;
+  // 启用 GPU 加速
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   will-change: transform;
 
   &:hover {
@@ -1271,6 +1274,7 @@ function formatDuration(seconds) {
   .card-img {
     filter: blur(8px);
     transition: filter 0.4s ease, opacity 0.25s;
+    will-change: filter, opacity;
 
     &.loaded {
       filter: blur(0);
