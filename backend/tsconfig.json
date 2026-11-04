@@ -23,7 +23,8 @@
       "@users/*": ["src/users/*"],
       "@media/*": ["src/media/*"],
       "@notes/*": ["src/notes/*"],
-      "@admin/*": ["src/admin/*"]
+      "@admin/*": ["src/admin/*"],
+      "@albums/*": ["src/albums/*"]
     }
   },
   "include": ["src/**/*"],

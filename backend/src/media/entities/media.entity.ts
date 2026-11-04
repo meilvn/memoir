@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm'
 import { User } from '../../users/entities/user.entity'
+import { Album } from '@albums/entities/album.entity'
 
 @Entity('media')
 export class Media {
@@ -58,6 +59,13 @@ export class Media {
   @ManyToOne(() => User, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'uploaded_by' })
   uploader: User
+
+  @Column({ name: 'album_id', type: 'uuid', nullable: true })
+  albumId: string
+
+  @ManyToOne(() => Album, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'album_id' })
+  album: Album
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date

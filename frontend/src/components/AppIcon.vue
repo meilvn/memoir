@@ -62,6 +62,7 @@ const ICONS = {
   logout: { paths: ['M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4', 'M16 17l5-5-5-5', 'M21 12H9'] },
   filter: { paths: ['M3 5h18l-7 8v6l-4-2v-4L3 5z'] },
   grid: { rects: [{ x: 3, y: 3, width: 7, height: 7, rx: 1 }, { x: 14, y: 3, width: 7, height: 7, rx: 1 }, { x: 3, y: 14, width: 7, height: 7, rx: 1 }, { x: 14, y: 14, width: 7, height: 7, rx: 1 }] },
+  folder: { paths: ['M2 7a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z', 'M2 10h20'] },
   pin: { paths: ['M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z'], circles: [{ cx: 12, cy: 10, r: 2.5 }] },
   arrowRight: { paths: ['M5 12h14', 'M13 6l6 6-6 6'] },
   arrowLeft: { paths: ['M19 12H5', 'M11 18l-6-6 6-6'] },

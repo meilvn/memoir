@@ -27,6 +27,18 @@ const routes = [
     meta: { title: '回忆画廊', requiresAuth: true },
   },
   {
+    path: '/albums',
+    name: 'Albums',
+    component: () => import('@/views/AlbumsView.vue'),
+    meta: { title: '我的相册', requiresAuth: true },
+  },
+  {
+    path: '/albums/:id',
+    name: 'AlbumDetail',
+    component: () => import('@/views/AlbumDetailView.vue'),
+    meta: { title: '相册详情', requiresAuth: true },
+  },
+  {
     path: '/gallery/:year/:month/:day',
     name: 'DateMedia',
     component: () => import('@/views/DateMediaView.vue'),

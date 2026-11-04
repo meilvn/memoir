@@ -77,3 +77,13 @@ export const usersApi = {
   updateRole: (id, role) => api.patch(`/users/${id}/role`, { role }),
   remove: (id) => api.delete(`/users/${id}`),
 }
+
+export const albumsApi = {
+  create: (data) => api.post('/albums', data),
+  findAll: () => api.get('/albums'),
+  findOne: (id) => api.get(`/albums/${id}`),
+  update: (id, data) => api.patch(`/albums/${id}`, data),
+  remove: (id) => api.delete(`/albums/${id}`),
+  addMedia: (albumId, mediaId) => api.post(`/albums/${albumId}/media/${mediaId}`),
+  removeMedia: (albumId, mediaId) => api.delete(`/albums/${albumId}/media/${mediaId}`),
+}
