@@ -156,6 +156,10 @@ function goDetail(id) {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: $space-6;
+  padding: $space-5;
+  background: linear-gradient(135deg, rgba($primary, 0.04) 0%, rgba($primary, 0.01) 100%);
+  border-radius: $radius-lg;
+  border: 1px solid $border;
 }
 
 .page-title {

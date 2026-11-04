@@ -159,6 +159,11 @@ async function submit() {
 
 .upload-head {
   margin-bottom: $space-6;
+  padding: $space-6 $space-5;
+  background: linear-gradient(135deg, rgba($primary, 0.04) 0%, rgba($primary, 0.01) 100%);
+  border-radius: $radius-lg;
+  border: 1px solid $border;
+  text-align: center;
 }
 
 .page-title {
@@ -187,7 +192,9 @@ async function submit() {
 
   &:hover, &.active {
     border-color: $primary;
-    background: $primary-soft;
+    background: linear-gradient(135deg, rgba($primary, 0.08) 0%, rgba($primary, 0.04) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba($primary, 0.15);
   }
 
   &.hasFiles {

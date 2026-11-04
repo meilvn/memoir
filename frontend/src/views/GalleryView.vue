@@ -603,6 +603,10 @@ function formatDuration(seconds) {
   margin-bottom: $space-6;
   flex-wrap: wrap;
   gap: $space-4;
+  padding: $space-5;
+  background: linear-gradient(135deg, rgba($primary, 0.03) 0%, rgba($primary, 0.01) 100%);
+  border-radius: $radius-lg;
+  border: 1px solid $border;
 }
 
 .eyebrow {
@@ -749,9 +753,10 @@ function formatDuration(seconds) {
 .tag-cloud {
   margin-bottom: $space-5;
   padding: $space-4 $space-5;
-  background: $bg-card;
+  background: linear-gradient(135deg, $bg-card 0%, rgba($primary-soft, 0.3) 100%);
   border: 1px solid $border;
   border-radius: $radius-md;
+  box-shadow: $shadow-sm;
 }
 
 .tag-cloud-head {
@@ -1034,10 +1039,12 @@ function formatDuration(seconds) {
   align-items: center;
   gap: $space-3;
   padding: $space-3 $space-4;
-  background: $primary-soft;
-  border: 1px solid $border;
+  background: linear-gradient(135deg, rgba($primary, 0.08) 0%, rgba($primary, 0.04) 100%);
+  border: 1px solid rgba($primary, 0.2);
   border-radius: $radius-md;
   margin-bottom: $space-4;
+  box-shadow: $shadow-sm;
+}
 
   .batch-count {
     font-weight: 600;
