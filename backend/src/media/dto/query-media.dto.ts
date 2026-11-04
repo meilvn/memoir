@@ -58,4 +58,12 @@ export class QueryMediaDto {
   @Max(500)
   @Type(() => Number)
   limit?: number
+
+  @IsOptional()
+  @IsString()
+  startDate?: string
+
+  @IsOptional()
+  @IsString()
+  endDate?: string
 }

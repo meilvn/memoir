@@ -66,7 +66,45 @@
           上传
           <input type="file" accept="image/*,video/*" multiple @change="handleUpload" hidden />
         </label>
+        <button
+          class="date-filter-btn"
+          :class="{ active: dateRange.start }"
+          title="日期筛选"
+          @click="showDateFilter = !showDateFilter"
+        >
+          <AppIcon name="calendar" :size="15" />
+        </button>
       </div>
+
+      <!-- 日期筛选器 -->
+      <transition name="fade">
+        <div v-if="showDateFilter" class="date-filter-bar">
+          <div class="date-inputs">
+            <div class="date-field">
+              <label>开始日期</label>
+              <input v-model="dateRange.start" type="date" class="date-input" @change="onDateChange" />
+            </div>
+            <span class="date-sep">—</span>
+            <div class="date-field">
+              <label>结束日期</label>
+              <input v-model="dateRange.end" type="date" class="date-input" @change="onDateChange" />
+            </div>
+          </div>
+          <button class="date-clear" @click="clearDateFilter">清除</button>
+        </div>
+      </transition>
+
+      <!-- 激活的筛选标签 -->
+      <transition name="fade">
+        <div v-if="hasActiveFilters" class="filter-pills">
+          <span class="pill" v-if="keyword">关键词: {{ keyword }}</span>
+          <span class="pill" v-if="filterType">类型: {{ filterType === 'PHOTO' ? '照片' : '视频' }}</span>
+          <span class="pill" v-if="filterFav">仅收藏</span>
+          <span class="pill" v-if="activeTag">标签: {{ activeTag }}</span>
+          <span class="pill" v-if="dateRange.start">日期: {{ dateRange.start }} ~ {{ dateRange.end || '今' }}</span>
+          <button class="pill-clear" @click="resetFilters">清除全部</button>
+        </div>
+      </transition>
     </header>
 
     <!-- 标签云 -->
@@ -249,6 +287,8 @@ const keyword = ref('')
 const activeTag = ref('')
 const tags = ref([])
 const tagsExpanded = ref(false)
+const showDateFilter = ref(false)
+const dateRange = ref({ start: '', end: '' })
 const lightboxOpen = ref(false)
 const lightboxIndex = ref(0)
 const viewMode = ref('masonry')
@@ -263,6 +303,10 @@ const scrollSentinel = ref(null)
 let observer = null
 const sortBy = ref('newest')
 let debounceTimer = null
+
+const hasActiveFilters = computed(() => {
+  return !!(keyword.value || filterType.value || filterFav.value || activeTag.value || dateRange.value.start)
+})
 
 function onCardMouseMove(e, el) {
   if (batchMode.value) return
@@ -367,11 +411,22 @@ function clearKeyword() {
   loadMedia()
 }
 
+function onDateChange() {
+  showDateFilter.value = false
+  loadMedia()
+}
+
+function clearDateFilter() {
+  dateRange.value = { start: '', end: '' }
+  loadMedia()
+}
+
 function resetFilters() {
   keyword.value = ''
   filterType.value = ''
   filterFav.value = false
   activeTag.value = ''
+  dateRange.value = { start: '', end: '' }
   loadMedia()
 }
 
@@ -379,14 +434,19 @@ async function loadMedia(reset = true) {
   loading.value = true
   try {
     const page = reset ? 1 : (items.value.length / 100) + 1
-    const data = await mediaApi.findAll({
+    const params = {
       mediaType: filterType.value || undefined,
       favorite: filterFav.value || undefined,
       keyword: keyword.value.trim() || undefined,
       tag: activeTag.value || undefined,
       page: reset ? 1 : page,
       limit: 100,
-    })
+    }
+    if (dateRange.value.start) {
+      params.startDate = dateRange.value.start
+      params.endDate = dateRange.value.end || undefined
+    }
+    const data = await mediaApi.findAll(params)
     if (reset) {
       items.value = data.items
     } else {
@@ -1269,5 +1329,171 @@ function formatDuration(seconds) {
 
 .empty-icon {
   color: $text-muted;
+}
+
+/* ===== 日期筛选器 ===== */
+.date-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-3 $space-4;
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: $radius-md;
+  margin-bottom: $space-4;
+  animation: fade-up 0.3s ease;
+}
+
+.date-inputs {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  flex: 1;
+}
+
+.date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  label {
+    font-size: $text-xs;
+    color: $text-muted;
+  }
+}
+
+.date-input {
+  padding: 6px 10px;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  background: $bg-warm;
+  color: $text-primary;
+  font-family: inherit;
+  font-size: $text-sm;
+
+  &:focus {
+    outline: none;
+    border-color: $primary;
+  }
+}
+
+.date-sep {
+  color: $text-muted;
+  margin-top: 16px;
+}
+
+.date-clear {
+  background: none;
+  border: none;
+  color: $text-muted;
+  cursor: pointer;
+  font-size: $text-sm;
+  padding: 4px 8px;
+
+  &:hover {
+    color: $error;
+  }
+}
+
+/* ===== 筛选标签 ===== */
+.filter-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+  align-items: center;
+  padding: $space-3 0;
+  animation: fade-up 0.3s ease;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px $space-3;
+  background: $primary-soft;
+  color: $primary;
+  border-radius: $radius-full;
+  font-size: $text-xs;
+  font-weight: 500;
+}
+
+.pill-clear {
+  background: none;
+  border: none;
+  color: $text-muted;
+  cursor: pointer;
+  font-size: $text-xs;
+  padding: 4px 8px;
+
+  &:hover {
+    color: $error;
+  }
+}
+
+/* ===== 响应式优化 ===== */
+@media (max-width: 768px) {
+  .gallery-controls {
+    gap: $space-2;
+  }
+
+  .search-input {
+    width: 100%;
+    max-width: none;
+
+    &:focus {
+      width: 100%;
+    }
+  }
+
+  .filter-select,
+  .sort-select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .upload-trigger span {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .gallery-header {
+    flex-direction: column;
+    gap: $space-3;
+  }
+
+  .gallery-controls {
+    width: 100%;
+  }
+
+  .date-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .date-inputs {
+    flex-direction: column;
+  }
+
+  .date-sep {
+    display: none;
+  }
+}
+
+/* ===== 性能优化：减少动画偏好 ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== 图片加载优化 ===== */
+img {
+  content-visibility: auto;
+  contain-intrinsic-size: 300px;
 }
 </style>

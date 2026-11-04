@@ -151,6 +151,8 @@ export class MediaService {
     if (dto.day) qb.andWhere('m.day = :day', { day: dto.day })
     if (dto.mediaType) qb.andWhere('m.media_type = :mediaType', { mediaType: dto.mediaType })
     if (dto.favorite) qb.andWhere('m.is_favorite = 1')
+    if (dto.startDate) qb.andWhere('m.taken_at >= :start', { start: dto.startDate })
+    if (dto.endDate) qb.andWhere('m.taken_at <= :end', { end: dto.endDate })
 
     // 关键词搜索：文件名 + 备注内容 + 备注标签 + 心情（LEFT JOIN 保证无备注的媒体也能匹配文件名）
     let joined = false

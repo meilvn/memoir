@@ -36,7 +36,12 @@
         </header>
 
         <!-- 主视觉区 -->
-        <div class="lb-stage">
+        <div
+          class="lb-stage"
+          @touchstart="onTouchStart"
+          @touchmove="onTouchMove"
+          @touchend="onTouchEnd"
+        >
           <button class="lb-nav lb-prev" :disabled="index === 0" title="上一张 (←)" @click="prev">
             <AppIcon name="chevronLeft" :size="26" />
           </button>
@@ -135,6 +140,9 @@ const panY = ref(0)
 let timer = null
 let isPanning = false
 let panStart = { x: 0, y: 0 }
+const touchStart = ref({ x: 0, y: 0 })
+const touchDelta = ref(0)
+const isSwiping = ref(false)
 
 const current = computed(() => props.items[props.index])
 
@@ -315,6 +323,33 @@ function resetZoom() {
   panY.value = 0
 }
 
+// ===== 触摸滑动支持 =====
+function onTouchStart(e) {
+  if (e.touches.length === 1 && zoomLevel.value <= 1) {
+    touchStart.value = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+    isSwiping.value = true
+    touchDelta.value = 0
+  }
+}
+
+function onTouchMove(e) {
+  if (!isSwiping.value || zoomLevel.value > 1) return
+  if (e.touches.length === 1) {
+    touchDelta.value = e.touches[0].clientX - touchStart.value.x
+  }
+}
+
+function onTouchEnd() {
+  if (!isSwiping.value) return
+  const threshold = 50
+  if (Math.abs(touchDelta.value) > threshold) {
+    if (touchDelta.value > 0) prev()
+    else next()
+  }
+  isSwiping.value = false
+  touchDelta.value = 0
+}
+
 function zoomBy(delta) {
   if (!current.value || current.value.mediaType !== 'PHOTO') return
   zoomLevel.value = Math.max(1, Math.min(4, zoomLevel.value + delta))
@@ -430,6 +465,15 @@ watch(() => props.index, resetZoom)
   justify-content: center;
   position: relative;
   animation: lb-in 0.35s $ease-out;
+  transition: transform 0.15s ease-out;
+}
+
+.lb-frame.swiping-left {
+  transform: translateX(-30px);
+}
+
+.lb-frame.swiping-right {
+  transform: translateX(30px);
 }
 
 @keyframes lb-in {
@@ -622,5 +666,37 @@ watch(() => props.index, resetZoom)
   .lb-bottom { padding: $space-3 $space-4 $space-4; }
   .lb-nav { width: 38px; height: 38px; }
   .lb-info { flex-wrap: wrap; gap: $space-2; }
+
+  /* 移动端简化按钮 */
+  .lb-actions {
+    gap: $space-1;
+
+    .lb-btn {
+      width: 34px;
+      height: 34px;
+    }
+  }
+
+  /* 移动端隐藏部分按钮 */
+  .lb-btn[title*="查看详情"] {
+    display: none;
+  }
+}
+
+/* ===== 性能优化：减少动画偏好 ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== 图片加载优化 ===== */
+.lb-image {
+  content-visibility: auto;
+  contain-intrinsic-size: 800px 600px;
 }
 </style>
