@@ -124,6 +124,8 @@
         v-reveal="Math.min(i, 12) * 40"
         class="media-card"
         :class="{ selectable: batchMode, selected: selectedIds.has(media.id) }"
+        @mousemove="onCardMouseMove($event, $el)"
+        @mouseleave="onCardMouseLeave($el)"
         @click="batchMode ? toggleSelect(media, $event) : openLightbox(i)"
       >
         <div class="card-media">
@@ -254,6 +256,22 @@ const scrollSentinel = ref(null)
 let observer = null
 const sortBy = ref('newest')
 let debounceTimer = null
+
+function onCardMouseMove(e, el) {
+  if (batchMode.value) return
+  const rect = el.getBoundingClientRect()
+  const x = e.clientX - rect.left
+  const y = e.clientY - rect.top
+  const centerX = rect.width / 2
+  const centerY = rect.height / 2
+  const rotateX = ((y - centerY) / centerY) * -3
+  const rotateY = ((x - centerX) / centerX) * 3
+  el.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-6px)`
+}
+
+function onCardMouseLeave(el) {
+  el.style.transform = ''
+}
 try {
   const saved = JSON.parse(localStorage.getItem('gallery-prefs') || '{}')
   if (saved.viewMode) viewMode.value = saved.viewMode
@@ -1070,13 +1088,13 @@ function formatDuration(seconds) {
   position: relative;
   background: $bg-light;
   border: 1px solid $border;
-  transform: translateY(0);
+  transform-style: preserve-3d;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.35s ease;
+  transition: transform 0.15s ease-out, box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.35s ease;
 
   &:hover {
-    transform: translateY(-6px);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+    border-color: $border-strong;
 
     img {
       transform: scale(1.04);
