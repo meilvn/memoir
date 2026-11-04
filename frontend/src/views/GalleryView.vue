@@ -303,6 +303,8 @@ const scrollSentinel = ref(null)
 let observer = null
 const sortBy = ref('newest')
 let debounceTimer = null
+// 节流 3D 效果更新
+let rafId = null
 
 const hasActiveFilters = computed(() => {
   return !!(keyword.value || filterType.value || filterFav.value || activeTag.value || dateRange.value.start)
@@ -310,17 +312,29 @@ const hasActiveFilters = computed(() => {
 
 function onCardMouseMove(e, el) {
   if (batchMode.value) return
-  const rect = el.getBoundingClientRect()
-  const x = e.clientX - rect.left
-  const y = e.clientY - rect.top
-  const centerX = rect.width / 2
-  const centerY = rect.height / 2
-  const rotateX = ((y - centerY) / centerY) * -3
-  const rotateY = ((x - centerX) / centerX) * 3
-  el.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-6px)`
+
+  // 使用 requestAnimationFrame 节流，避免频繁更新 transform
+  if (rafId) return
+
+  rafId = requestAnimationFrame(() => {
+    const rect = el.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    const centerX = rect.width / 2
+    const centerY = rect.height / 2
+    // 降低倾斜角度和幅度，减少卡顿
+    const rotateX = ((y - centerY) / centerY) * -1.5
+    const rotateY = ((x - centerX) / centerX) * 1.5
+    el.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`
+    rafId = null
+  })
 }
 
 function onCardMouseLeave(el) {
+  if (rafId) {
+    cancelAnimationFrame(rafId)
+    rafId = null
+  }
   el.style.transform = ''
 }
 try {
@@ -1200,7 +1214,8 @@ function formatDuration(seconds) {
   border: 1px solid $border;
   transform-style: preserve-3d;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: transform 0.15s ease-out, box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.35s ease;
+  transition: box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.35s ease;
+  will-change: transform;
 
   &:hover {
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
@@ -1219,11 +1234,28 @@ function formatDuration(seconds) {
     width: 100%;
     display: block;
     transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s;
+    will-change: transform, opacity;
   }
 
   &.selected {
     border-color: $primary;
     box-shadow: 0 0 0 2px $primary-soft, 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* 尊重用户的减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .media-card {
+    transform: none !important;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease !important;
+
+    img {
+      transition: opacity 0.2s !important;
+    }
+
+    &:hover img {
+      transform: none !important;
+    }
   }
 }
 
