@@ -99,6 +99,9 @@
         <button class="batch-btn" @click="batchFavorite">
           <AppIcon name="heart" :size="14" />批量收藏
         </button>
+        <button class="batch-btn" @click="batchDownload">
+          <AppIcon name="download" :size="14" />批量下载
+        </button>
         <button class="batch-btn danger" @click="batchDelete">
           <AppIcon name="trash" :size="14" />批量删除
         </button>
@@ -454,6 +457,22 @@ async function batchFavorite() {
   } catch {
     toast.error('批量操作失败')
   }
+}
+
+function batchDownload() {
+  const ids = Array.from(selectedIds.value)
+  const mediaItems = items.value.filter((m) => ids.includes(m.id))
+  mediaItems.forEach((m) => {
+    const url = mediaStore.getMediaUrl(m.originalPath)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = m.filename
+    a.target = '_blank'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  })
+  toast.success(`开始下载 ${mediaItems.length} 个文件`)
 }
 
 async function batchDelete() {

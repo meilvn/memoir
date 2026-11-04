@@ -29,6 +29,17 @@
         </div>
       </div>
 
+      <!-- EXIF 元数据 -->
+      <div v-if="exifFields.length" class="exif-section">
+        <h3 class="section-title">照片信息</h3>
+        <div class="exif-grid">
+          <div v-for="field in exifFields" :key="field.label" class="exif-item">
+            <span class="exif-label">{{ field.label }}</span>
+            <span class="exif-value">{{ field.value }}</span>
+          </div>
+        </div>
+      </div>
+
       <div class="note-section">
         <div class="note-header">
           <h3>回忆备注</h3>
@@ -115,6 +126,19 @@ const saving = ref(false)
 const deleteOpen = ref(false)
 
 const moods = ['😊', '😂', '❤️', '🤔', '😮', '🎉']
+
+const exifFields = computed(() => {
+  if (!media.value?.exifData) return []
+  const exif = media.value.exifData
+  const fields = []
+  if (exif.Make || exif.Model) fields.push({ label: '相机', value: `${exif.Make || ''} ${exif.Model || ''}`.trim() })
+  if (exif.FocalLength) fields.push({ label: '焦距', value: `${exif.FocalLength} mm` })
+  if (exif.FNumber) fields.push({ label: '光圈', value: `f/${exif.FNumber}` })
+  if (exif.ExposureTime) fields.push({ label: '快门', value: exif.ExposureTime < 1 ? `1/${Math.round(1 / exif.ExposureTime)}s` : `${exif.ExposureTime}s` })
+  if (exif.ISO) fields.push({ label: 'ISO', value: exif.ISO })
+  if (exif.LensModel) fields.push({ label: '镜头', value: exif.LensModel })
+  return fields
+})
 
 onMounted(async () => {
   media.value = await mediaApi.getOne(route.params.id)
@@ -300,6 +324,45 @@ async function executeDelete() {
   text-transform: uppercase;
   color: $primary;
   margin-bottom: $space-2;
+}
+
+/* ===== EXIF 元数据 ===== */
+.exif-section {
+  padding: $space-4 $space-5;
+  border-top: 1px solid $border;
+
+  .section-title {
+    font-size: $text-sm;
+    font-weight: 600;
+    color: $text-secondary;
+    margin-bottom: $space-3;
+    letter-spacing: 0.04em;
+  }
+}
+
+.exif-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: $space-3;
+}
+
+.exif-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.exif-label {
+  font-size: $text-xs;
+  color: $text-muted;
+  letter-spacing: 0.04em;
+}
+
+.exif-value {
+  font-size: $text-sm;
+  color: $text-primary;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
 
 .note-header {
