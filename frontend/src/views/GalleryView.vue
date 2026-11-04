@@ -49,6 +49,14 @@
         >
           <AppIcon name="grid" :size="15" />
         </button>
+        <button
+          class="batch-toggle"
+          :class="{ active: batchMode }"
+          :title="batchMode ? '取消批量选择' : '批量操作'"
+          @click="toggleBatchMode"
+        >
+          <AppIcon name="check" :size="15" />
+        </button>
         <label class="upload-btn btn btn-primary">
           <AppIcon name="upload" :size="15" />
           上传
@@ -80,6 +88,20 @@
       </div>
     </section>
 
+    <!-- 批量操作栏 -->
+    <transition name="fade">
+      <div v-if="batchMode && selectedIds.size > 0" class="batch-bar">
+        <span class="batch-count">已选 {{ selectedIds.size }} 项</span>
+        <button class="batch-btn" @click="batchFavorite">
+          <AppIcon name="heart" :size="14" />批量收藏
+        </button>
+        <button class="batch-btn danger" @click="batchDelete">
+          <AppIcon name="trash" :size="14" />批量删除
+        </button>
+        <button class="batch-btn ghost" @click="clearSelection">取消选择</button>
+      </div>
+    </transition>
+
     <!-- 生效的标签筛选提示 -->
     <div v-if="activeTag && !loading" class="result-bar">
       标签「<strong>{{ activeTag }}</strong>」下的回忆
@@ -101,22 +123,30 @@
         :key="media.id"
         v-reveal="Math.min(i, 12) * 40"
         class="media-card"
-        @click="openLightbox(i)"
+        :class="{ selectable: batchMode, selected: selectedIds.has(media.id) }"
+        @click="batchMode ? toggleSelect(media, $event) : openLightbox(i)"
       >
         <img :src="mediaStore.getMediaUrl(media.thumbnailPath)" :alt="media.filename" loading="lazy" />
+        <div v-if="batchMode" class="card-check" @click.stop="toggleSelect(media, $event)">
+          <AppIcon v-if="selectedIds.has(media.id)" name="check" :size="14" />
+        </div>
         <FavoriteButton
+          v-if="!batchMode"
           v-model="media.isFavorite"
           :media-id="media.id"
           variant="card"
           class="card-fav"
         />
-        <button class="card-delete" title="删除" @click.stop="confirmDelete(media)">
+        <button v-if="!batchMode" class="card-delete" title="删除" @click.stop="confirmDelete(media)">
           <AppIcon name="trash" :size="14" />
         </button>
         <figcaption class="card-overlay">
           <span class="type-badge">
             <AppIcon :name="media.mediaType === 'VIDEO' ? 'film' : 'image'" :size="13" />
             {{ media.mediaType === 'VIDEO' ? '视频' : '照片' }}
+          </span>
+          <span v-if="media.mediaType === 'VIDEO' && media.duration" class="video-duration">
+            {{ formatDuration(media.duration) }}
           </span>
           <span class="date-label">{{ formatDate(media.takenAt) }}</span>
         </figcaption>
@@ -183,6 +213,8 @@ const viewMode = ref('masonry')
 const deleteDialogOpen = ref(false)
 const deleteTarget = ref(null)
 const sortBy = ref('newest')
+const batchMode = ref(false)
+const selectedIds = ref(new Set())
 let debounceTimer = null
 
 // 标签云默认展示前 12 个，展开后全部
@@ -295,6 +327,49 @@ async function onLightboxFavChange({ isFavorite }) {
   if (filterFav.value) await loadMedia()
 }
 
+function toggleBatchMode() {
+  batchMode.value = !batchMode.value
+  if (!batchMode.value) clearSelection()
+}
+
+function toggleSelect(media, e) {
+  e.stopPropagation()
+  const set = selectedIds.value
+  if (set.has(media.id)) set.delete(media.id)
+  else set.add(media.id)
+  // trigger reactivity
+  selectedIds.value = new Set(set)
+}
+
+function clearSelection() {
+  selectedIds.value = new Set()
+}
+
+async function batchFavorite() {
+  const ids = Array.from(selectedIds.value)
+  try {
+    await Promise.all(ids.map((id) => mediaApi.toggleFavorite(id).then((r) => ({ id, fav: r.isFavorite }))))
+    toast.success(`已更新 ${ids.length} 项`)
+    await loadMedia()
+    clearSelection()
+  } catch {
+    toast.error('批量操作失败')
+  }
+}
+
+async function batchDelete() {
+  if (!confirm(`确定删除选中的 ${selectedIds.value.size} 项吗？`)) return
+  const ids = Array.from(selectedIds.value)
+  try {
+    await Promise.all(ids.map((id) => mediaStore.removeMedia(id)))
+    toast.success(`已删除 ${ids.length} 项`)
+    await loadMedia()
+    clearSelection()
+  } catch {
+    toast.error('批量删除失败')
+  }
+}
+
 function confirmDelete(media) {
   deleteTarget.value = media
   deleteDialogOpen.value = true
@@ -317,6 +392,13 @@ function formatDate(dateStr) {
   if (!dateStr) return ''
   const d = new Date(dateStr)
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+}
+
+function formatDuration(seconds) {
+  if (!seconds || seconds <= 0) return ''
+  const m = Math.floor(seconds / 60)
+  const s = Math.floor(seconds % 60)
+  return `${m}:${String(s).padStart(2, '0')}`
 }
 </script>
 
@@ -691,6 +773,120 @@ function formatDate(dateStr) {
   }
 }
 
+/* ===== 批量选择模式 ===== */
+.card-check {
+  position: absolute;
+  top: $space-2;
+  left: $space-2;
+  z-index: 4;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: $transition-fast;
+  padding: 0;
+
+  &:hover {
+    border-color: #fff;
+    background: rgba(0, 0, 0, 0.5);
+  }
+}
+
+.media-card.selectable {
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-2px);
+
+    img {
+      transform: none;
+    }
+  }
+
+  &.selected {
+    outline: 2px solid $primary;
+    outline-offset: -2px;
+
+    .card-check {
+      background: $primary;
+      border-color: $primary;
+    }
+  }
+}
+
+/* 批量操作栏 */
+.batch-bar {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-3 $space-4;
+  background: $primary-soft;
+  border: 1px solid $border;
+  border-radius: $radius-md;
+  margin-bottom: $space-4;
+
+  .batch-count {
+    font-weight: 600;
+    color: $primary;
+    margin-right: $space-2;
+  }
+
+  .batch-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px $space-3;
+    border: 1px solid $border;
+    border-radius: $radius-sm;
+    background: $bg-card;
+    color: $text-secondary;
+    font-size: $text-sm;
+    font-family: inherit;
+    cursor: pointer;
+    transition: $transition-fast;
+
+    &:hover {
+      border-color: $primary;
+      color: $primary;
+    }
+
+    &.danger {
+      color: $error;
+      border-color: rgba($error, 0.3);
+
+      &:hover {
+        background: rgba($error, 0.08);
+        border-color: $error;
+      }
+    }
+
+    &.ghost {
+      background: none;
+      border-color: transparent;
+      color: $text-muted;
+
+      &:hover {
+        color: $text-primary;
+      }
+    }
+  }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
 .masonry-gallery {
   columns: 4;
   column-gap: $space-4;
@@ -806,6 +1002,17 @@ function formatDate(dateStr) {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+.video-duration {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 4px;
+  font-size: $text-xs;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
 }
 
 .date-label {

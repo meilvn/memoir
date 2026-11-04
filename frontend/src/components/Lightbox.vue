@@ -83,6 +83,9 @@
               @click="jumpTo(m.id)"
             >
               <img :src="mediaStore.getMediaUrl(m.thumbnailPath)" :alt="m.filename" loading="lazy" />
+              <span v-if="m.mediaType === 'VIDEO' && m.duration" class="strip-dur">
+                {{ formatDuration(m.duration) }}
+              </span>
             </button>
           </div>
         </footer>
@@ -238,6 +241,13 @@ function formatDate(dateStr) {
   if (!dateStr) return ''
   const d = new Date(dateStr)
   return `${d.getFullYear()} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日`
+}
+
+function formatDuration(seconds) {
+  if (!seconds || seconds <= 0) return ''
+  const m = Math.floor(seconds / 60)
+  const s = Math.floor(seconds % 60)
+  return `${m}:${String(s).padStart(2, '0')}`
 }
 </script>
 
@@ -467,6 +477,19 @@ function formatDate(dateStr) {
     height: 100%;
     object-fit: cover;
     display: block;
+  }
+
+  .strip-dur {
+    position: absolute;
+    bottom: 3px;
+    right: 3px;
+    padding: 1px 5px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    font-size: 0.65rem;
+    border-radius: 3px;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
   }
 
   &:hover {

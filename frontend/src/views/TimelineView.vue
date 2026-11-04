@@ -40,6 +40,9 @@
               >
                 <img :src="mediaStore.getMediaUrl(media.thumbnailPath)" :alt="media.filename" loading="lazy" />
                 <span class="timeline-date">{{ formatShortDate(media.takenAt) }}</span>
+                <span v-if="media.mediaType === 'VIDEO' && media.duration" class="tl-video-dur">
+                  {{ formatDuration(media.duration) }}
+                </span>
               </div>
             </div>
             <!-- 当月照片较多时折叠，点击展开全部 -->
@@ -181,6 +184,13 @@ function formatShortDate(dateStr) {
   if (!dateStr) return ''
   const d = new Date(dateStr)
   return `${d.getMonth() + 1}/${d.getDate()}`
+}
+
+function formatDuration(seconds) {
+  if (!seconds || seconds <= 0) return ''
+  const m = Math.floor(seconds / 60)
+  const s = Math.floor(seconds % 60)
+  return `${m}:${String(s).padStart(2, '0')}`
 }
 </script>
 
@@ -385,6 +395,19 @@ function formatShortDate(dateStr) {
   &:hover img {
     transform: scale(1.06);
   }
+}
+
+.tl-video-dur {
+  position: absolute;
+  bottom: $space-1;
+  right: $space-1;
+  padding: 2px 7px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 0.7rem;
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
 }
 
 .timeline-date {
