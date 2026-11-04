@@ -230,7 +230,15 @@ function goYear(year) {
   background: $bg-card;
   border: 1px solid $border;
   border-radius: $radius-md;
-  box-shadow: $shadow-sm;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transform: translateY(0);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    border-color: $border-strong;
+  }
 }
 
 .tile-icon {

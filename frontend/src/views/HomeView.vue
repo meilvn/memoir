@@ -223,7 +223,17 @@ function formatDate(dateStr) {
   line-height: 1.28;
   letter-spacing: 0.01em;
   margin: $space-3 0 $space-4;
-  color: $text-primary;
+  background: linear-gradient(135deg, $text-primary 0%, $primary 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: hero-gradient 6s ease infinite;
+  background-size: 200% 200%;
+}
+
+@keyframes hero-gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 .hero-sub {
@@ -236,6 +246,18 @@ function formatDate(dateStr) {
   height: 2px;
   background: $primary;
   margin-top: $space-5;
+  animation: hero-rule-in 1s $ease-out 0.3s both;
+}
+
+@keyframes hero-rule-in {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+  to {
+    width: 56px;
+    opacity: 1;
+  }
 }
 
 /* ===== 快捷入口 ===== */

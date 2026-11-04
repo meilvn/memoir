@@ -67,6 +67,10 @@ onBeforeUnmount(() => {
   transform: translateY(-8px) scale(0.995);
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 .app-body {
   display: flex;
   flex: 1;
