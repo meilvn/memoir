@@ -240,6 +240,12 @@ function formatShortDate(dateStr) {
   margin-bottom: $space-4;
   cursor: pointer;
   user-select: none;
+  position: sticky;
+  top: 64px;
+  z-index: 10;
+  background: $bg-warm;
+  padding: $space-2 0;
+  border-radius: $radius-sm;
 
   &:hover .year-title {
     color: $primary;
