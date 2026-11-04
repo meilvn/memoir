@@ -47,7 +47,15 @@
               :src="mediaStore.getMediaUrl(current.originalPath)"
               :alt="current.filename"
               class="lb-image"
+              :class="{ zoomed: zoomLevel > 1 }"
+              :style="{ transform: `scale(${zoomLevel}) translate(${panX.value / zoomLevel}px, ${panY.value / zoomLevel}px)` }"
               draggable="false"
+              @click="onImageClick"
+              @wheel="onWheel"
+              @pointerdown="onPointerDown"
+              @pointermove="onPointerMove"
+              @pointerup="onPointerUp"
+              @pointerleave="onPointerUp"
             />
             <video
               v-else-if="current"
@@ -59,6 +67,13 @@
             />
             <div v-if="slideshow" class="lb-progress" :style="{ '--lb-dur': SLIDESHOW_MS + 'ms' }" :key="`p-${index}-${slideshow}`" />
           </figure>
+
+          <!-- 缩放指示器 -->
+          <transition name="fade">
+            <div v-if="zoomLevel > 1" class="zoom-badge" @click="resetZoom">
+              {{ Math.round(zoomLevel * 100) }}% · 点击重置
+            </div>
+          </transition>
 
           <button class="lb-nav lb-next" :disabled="index >= items.length - 1" title="下一张 (→)" @click="next">
             <AppIcon name="chevronRight" :size="26" />
@@ -114,7 +129,12 @@ const mediaStore = useMediaStore()
 const visible = ref(props.modelValue)
 const slideshow = ref(false)
 const SLIDESHOW_MS = 4000
+const zoomLevel = ref(1)
+const panX = ref(0)
+const panY = ref(0)
 let timer = null
+let isPanning = false
+let panStart = { x: 0, y: 0 }
 
 const current = computed(() => props.items[props.index])
 
@@ -249,6 +269,51 @@ function formatDuration(seconds) {
   const s = Math.floor(seconds % 60)
   return `${m}:${String(s).padStart(2, '0')}`
 }
+
+// ===== 图片缩放/平移 =====
+function onImageClick() {
+  if (zoomLevel.value > 1) {
+    resetZoom()
+  } else {
+    zoomLevel.value = 2.5
+    panX.value = 0
+    panY.value = 0
+  }
+}
+
+function onWheel(e) {
+  if (!current.value || current.value.mediaType !== 'PHOTO') return
+  e.preventDefault()
+  const delta = e.deltaY > 0 ? -0.3 : 0.3
+  zoomLevel.value = Math.max(1, Math.min(4, zoomLevel.value + delta))
+  if (zoomLevel.value <= 1) resetZoom()
+}
+
+function onPointerDown(e) {
+  if (zoomLevel.value <= 1) return
+  isPanning = true
+  panStart = { x: e.clientX - panX.value, y: e.clientY - panY.value }
+  e.target.setPointerCapture?.(e.pointerId)
+}
+
+function onPointerMove(e) {
+  if (!isPanning) return
+  panX.value = e.clientX - panStart.x
+  panY.value = e.clientY - panStart.y
+}
+
+function onPointerUp() {
+  isPanning = false
+}
+
+function resetZoom() {
+  zoomLevel.value = 1
+  panX.value = 0
+  panY.value = 0
+}
+
+// 监听图片切换时重置缩放
+watch(() => props.index, resetZoom)
 </script>
 
 <style scoped lang="scss">
@@ -369,6 +434,18 @@ function formatDuration(seconds) {
   object-fit: contain;
   border-radius: $radius-sm;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+  transition: transform 0.15s ease-out;
+  cursor: zoom-in;
+
+  &.zoomed {
+    cursor: grab;
+    max-width: none;
+    max-height: none;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
 }
 
 .lb-nav {
@@ -410,6 +487,24 @@ function formatDuration(seconds) {
 @keyframes lb-progress {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
+}
+
+/* 缩放指示器 */
+.zoom-badge {
+  position: absolute;
+  top: $space-3;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 14px;
+  background: rgba(28, 25, 22, 0.75);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: $text-xs;
+  border-radius: $radius-full;
+  cursor: pointer;
+  user-select: none;
+  z-index: 5;
+  transition: opacity 0.2s;
 }
 
 /* ===== 底部信息 + 缩略图条 ===== */
