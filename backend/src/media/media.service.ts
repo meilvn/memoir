@@ -1,7 +1,7 @@
 import { Injectable, Inject, BadRequestException, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository, Brackets } from 'typeorm'
-import { createWriteStream, mkdirSync, existsSync, unlinkSync, copyFileSync } from 'fs'
+import { createWriteStream, mkdirSync, existsSync, unlinkSync, copyFileSync, renameSync } from 'fs'
 import { extname, join } from 'path'
 import { randomUUID } from 'crypto'
 import sharp from 'sharp'
@@ -39,28 +39,25 @@ export class MediaService {
 
   async upload(file: Express.Multer.File, uploadedBy: string) {
     const video = isVideo(file.mimetype)
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = String(now.getMonth() + 1).padStart(2, '0')
-    const day = String(now.getDate()).padStart(2, '0')
 
     const ext = extname(file.originalname)
     const safeName = `${Date.now()}_${randomUUID().slice(0, 8)}${ext}`
-    const relDir = join(`${year}`, month, day)
-    const absDir = join(UPLOAD_DIR, toStr(year), toStr(month), toStr(day))
-    ensureDir(absDir)
 
-    const absPath = join(absDir, safeName)
-    copyFileSync(file.path, absPath)
+    // First copy to temp so we can read EXIF/dimensions
+    const tmpDir = join(UPLOAD_DIR, 'tmp')
+    ensureDir(tmpDir)
+    const tmpPath = join(tmpDir, safeName)
+    copyFileSync(file.path, tmpPath)
 
     let width = 0
     let height = 0
     let duration: number | null = null
     let exifData: Record<string, any> = {}
+    let takenAt = new Date()
 
     // Get dimensions
     try {
-      const meta = await sharp(absPath).metadata()
+      const meta = await sharp(tmpPath).metadata()
       width = meta.width || 0
       height = meta.height || 0
     } catch {
@@ -70,18 +67,33 @@ export class MediaService {
     // Video: get duration via ffprobe
     if (video) {
       duration = await new Promise<number>((resolve) => {
-        ffprobe(absPath, (err, info) => {
+        ffprobe(tmpPath, (err, info) => {
           resolve(err ? 0 : Math.round((info as any)?.format?.duration || 0))
         })
       })
     }
 
-    // EXIF
+    // EXIF - extract takenAt if available
     try {
-      exifData = (await exifr.parse(absPath)) || {}
+      const parsed = await exifr.parse(tmpPath, { pick: ['dateTimeOriginal', 'createDate', 'modifyDate'] }) || {}
+      exifData = parsed
+      if (parsed.dateTimeOriginal) takenAt = new Date(parsed.dateTimeOriginal)
+      else if (parsed.createDate) takenAt = new Date(parsed.createDate)
+      else if (parsed.modifyDate) takenAt = new Date(parsed.modifyDate)
     } catch {
       // no exif
     }
+
+    const year = takenAt.getFullYear()
+    const month = String(takenAt.getMonth() + 1).padStart(2, '0')
+    const day = String(takenAt.getDate()).padStart(2, '0')
+
+    const relDir = join(`${year}`, month, day)
+    const absDir = join(UPLOAD_DIR, toStr(year), toStr(month), toStr(day))
+    ensureDir(absDir)
+
+    const absPath = join(absDir, safeName)
+    renameSync(tmpPath, absPath)
 
     // Generate thumbnail
     const thumbRelDir = join(`${year}`, month, day)
@@ -114,7 +126,7 @@ export class MediaService {
       duration: duration || 0,
       width,
       height,
-      takenAt: now,
+      takenAt,
       year,
       month: Number(month),
       day: Number(day),
@@ -124,8 +136,9 @@ export class MediaService {
 
     const saved = await this.mediaRepository.save(media)
 
-    // Cleanup temp
+    // Cleanup multer temp file
     try { unlinkSync(file.path) } catch {}
+    try { unlinkSync(tmpPath) } catch {}
 
     return saved
   }
