@@ -190,6 +190,7 @@
           <video
             v-if="media.mediaType === 'VIDEO'"
             :src="mediaStore.getMediaUrl(media.originalPath)"
+            :data-media-id="media.id"
             :class="{ visible: videoHovering.has(media.id) }"
             muted
             loop
@@ -297,8 +298,8 @@ const deleteDialogOpen = ref(false)
 const deleteTarget = ref(null)
 const batchMode = ref(false)
 const selectedIds = ref(new Set())
-const videoHovering = ref(new Set())
-// 使用 shallowRef 避免 Set 内部变化触发不必要的组件重新渲染
+// 使用 shallowRef 避免 Set 内部变化触发不必要的重新渲染
+const videoHovering = shallowRef(new Set())
 const imageLoaded = shallowRef(new Set())
 const hasMore = ref(true)
 const scrollSentinel = ref(null)
@@ -574,8 +575,25 @@ function confirmDelete(media) {
 }
 
 function onVideoHover(mediaId, entering) {
+  // 更新响应式数据
   if (entering) videoHovering.value.add(mediaId)
   else videoHovering.value.delete(mediaId)
+
+  // 手动更新 DOM 类名，避免组件重新渲染导致 3D transform 丢失
+  const video = document.querySelector(`video[data-media-id="${mediaId}"]`)
+  if (video) {
+    if (entering) {
+      video.classList.add('visible')
+      // 隐藏对应图片
+      const img = video.parentElement?.querySelector('img')
+      if (img) img.classList.add('hidden')
+    } else {
+      video.classList.remove('visible')
+      // 显示对应图片
+      const img = video.parentElement?.querySelector('img')
+      if (img) img.classList.remove('hidden')
+    }
+  }
 }
 
 function onImageLoad(mediaId) {
