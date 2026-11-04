@@ -7,15 +7,22 @@
 
     <div class="media-info">
       <div class="info-header">
-        <h1>{{ media.mediaType === 'VIDEO' ? '🎬' : '📷' }} {{ media.filename }}</h1>
-        <span class="media-date">{{ formatDate(media.takenAt) }}</span>
+        <div>
+          <p class="eyebrow">
+            <AppIcon :name="media.mediaType === 'VIDEO' ? 'film' : 'image'" :size="13" />
+            {{ media.mediaType === 'VIDEO' ? '视频' : '照片' }}
+          </p>
+          <h1 class="serif">{{ formatDate(media.takenAt) }}</h1>
+        </div>
+        <span class="media-date">{{ media.filename }}</span>
       </div>
 
       <div class="note-section">
         <div class="note-header">
-          <h3>💬 备注</h3>
+          <h3>回忆备注</h3>
           <button v-if="!editingNote" class="btn btn-secondary" @click="editingNote = true">
-            ✏️ 添加备注
+            <AppIcon name="edit" :size="14" />
+            添加备注
           </button>
           <button v-else class="btn btn-ghost" @click="editingNote = false">取消</button>
         </div>
@@ -55,6 +62,7 @@ import { useRoute } from 'vue-router'
 import { useMediaStore } from '@/stores/media'
 import { notesApi, mediaApi } from '@/api'
 import { useToast } from 'vue-toastification'
+import AppIcon from '@/components/AppIcon.vue'
 
 const route = useRoute()
 const mediaStore = useMediaStore()
@@ -114,51 +122,75 @@ function formatDate(dateStr) {
 .media-detail-page {
   max-width: 1000px;
   margin: 0 auto;
-  padding: 24px;
+  padding: $space-6 $space-5 $space-8;
 }
 
 .media-preview {
   border-radius: $radius-lg;
   overflow: hidden;
   box-shadow: $shadow-lg;
-  margin-bottom: 24px;
-  background: #000;
+  margin-bottom: $space-5;
+  background: $bg-ink;
 
   img, video {
     width: 100%;
-    max-height: 60vh;
+    max-height: 62vh;
     object-fit: contain;
+    display: block;
   }
 }
 
 .media-info {
   background: $bg-card;
-  border-radius: $radius-md;
-  padding: 24px;
+  border: 1px solid $border;
+  border-radius: $radius-lg;
+  padding: $space-5;
   box-shadow: $shadow-sm;
 }
 
 .info-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+  align-items: flex-start;
+  gap: $space-4;
+  margin-bottom: $space-5;
+  padding-bottom: $space-4;
+  border-bottom: 1px solid $border;
 
   h1 {
-    font-size: 1.2rem;
+    font-size: $text-2xl;
+    font-weight: 600;
   }
 
   .media-date {
     color: $text-muted;
-    font-size: 0.9rem;
+    font-size: $text-xs;
+    letter-spacing: 0.04em;
+    word-break: break-all;
   }
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: $text-xs;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: $primary;
+  margin-bottom: $space-2;
 }
 
 .note-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: $space-3;
+
+  h3 {
+    font-size: $text-lg;
+    font-weight: 600;
+  }
 }
 
 .note-editor {

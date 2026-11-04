@@ -32,7 +32,7 @@
           :key="m.id"
           v-reveal="i * 60"
           class="otd-item"
-          @click="goToDetail(m.id)"
+          @click="openOtd(i)"
         >
           <img :src="mediaStore.getMediaUrl(m.thumbnailPath)" :alt="m.filename" loading="lazy" />
           <figcaption>
@@ -58,7 +58,7 @@
           :key="media.id"
           v-reveal="i * 45"
           class="recent-item"
-          @click="goToDetail(media.id)"
+          @click="openRecent(i)"
         >
           <img :src="mediaStore.getMediaUrl(media.thumbnailPath)" :alt="media.filename" loading="lazy" />
           <figcaption>
@@ -80,24 +80,37 @@
         <router-link to="/gallery" class="btn btn-primary">浏览画廊</router-link>
       </div>
     </section>
+
+    <!-- 灯箱：OTD 与最近回忆共用，按打开来源切换列表 -->
+    <Lightbox
+      v-model="lightboxOpen"
+      v-model:index="lightboxIndex"
+      :items="lightboxItems"
+      @close="lightboxOpen = false"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useMediaStore } from '@/stores/media'
 import { useAuthStore } from '@/stores/auth'
-import { useRouter } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
+import Lightbox from '@/components/Lightbox.vue'
 import { mediaApi } from '@/api'
 
 const mediaStore = useMediaStore()
 const authStore = useAuthStore()
-const router = useRouter()
 
 const recentMedia = ref([])
 const onThisDay = ref([])
 const notLoggedIn = ref(!authStore.isLoggedIn)
+const lightboxOpen = ref(false)
+const lightboxIndex = ref(0)
+const lightboxSource = ref('recent') // 'otd' | 'recent'
+
+// 灯箱列表随来源切换：OTD 模块打开时只浏览 OTD 的回忆
+const lightboxItems = computed(() => (lightboxSource.value === 'otd' ? onThisDay.value : recentMedia.value))
 
 const quickCards = [
   { icon: 'image', title: '回忆画廊', desc: '浏览所有照片与视频', to: '/gallery' },
@@ -126,8 +139,16 @@ function yearsAgo(dateStr) {
   return new Date().getFullYear() - new Date(dateStr).getFullYear()
 }
 
-function goToDetail(id) {
-  router.push(`/media/${id}`)
+function openOtd(i) {
+  lightboxSource.value = 'otd'
+  lightboxIndex.value = i
+  lightboxOpen.value = true
+}
+
+function openRecent(i) {
+  lightboxSource.value = 'recent'
+  lightboxIndex.value = i
+  lightboxOpen.value = true
 }
 
 function formatDate(dateStr) {

@@ -1,13 +1,18 @@
 <template>
   <div class="timeline-page">
-    <h1 class="page-title">⏳ 时光之旅</h1>
+    <header class="page-head" data-reveal>
+      <p class="eyebrow">Timeline</p>
+      <h1 class="page-title serif">时光之旅</h1>
+    </header>
     <div v-if="timeline.length" class="timeline-container">
       <div v-for="group in timelineGroups" :key="group.year" class="timeline-year">
         <div class="year-header" @click="toggleYear(group.year)">
           <span class="year-dot"></span>
-          <h2 class="year-title">{{ group.year }} 年</h2>
+          <h2 class="year-title serif">{{ group.year }} 年</h2>
           <span class="year-count">{{ group.count }} 张</span>
-          <span class="year-arrow" :class="{ open: isYearExpanded(group.year) }">▶</span>
+          <span class="year-arrow" :class="{ open: isYearExpanded(group.year) }">
+            <AppIcon name="chevronRight" :size="14" />
+          </span>
         </div>
         <!-- 年份下的月份分组（年份收起时隐藏） -->
         <template v-if="isYearExpanded(group.year)">
@@ -18,7 +23,12 @@
               <span class="month-count">{{ mg.items.length }} 张</span>
             </div>
             <div class="year-media">
-              <div v-for="media in visibleItems(mg)" :key="media.id" class="timeline-media-item" @click="goDetail(media.id)">
+              <div
+                v-for="(media, i) in visibleItems(mg)"
+                :key="media.id"
+                class="timeline-media-item"
+                @click="openLightbox(media.id)"
+              >
                 <img :src="mediaStore.getMediaUrl(media.thumbnailPath)" :alt="media.filename" loading="lazy" />
                 <span class="timeline-date">{{ formatShortDate(media.takenAt) }}</span>
               </div>
@@ -26,7 +36,8 @@
             <!-- 当月照片较多时折叠，点击展开全部 -->
             <div v-if="mg.items.length > COLLAPSED_COUNT" class="month-more">
               <button class="more-btn" @click="toggleMonth(mg.year, mg.month)">
-                {{ isMonthExpanded(mg.year, mg.month) ? '收起 ▲' : `查看全部 ${mg.items.length} 张 ▼` }}
+                {{ isMonthExpanded(mg.year, mg.month) ? '收起' : `查看全部 ${mg.items.length} 张` }}
+                <AppIcon :name="isMonthExpanded(mg.year, mg.month) ? 'chevronUp' : 'chevronDown'" :size="13" />
               </button>
             </div>
           </div>
@@ -34,24 +45,33 @@
       </div>
     </div>
     <div v-else class="empty-state">
-      <div class="empty-icon">⏳</div>
+      <div class="empty-icon"><AppIcon name="clock" :size="26" /></div>
       <p>还没有回忆，快去上传吧！</p>
     </div>
+
+    <Lightbox
+      v-model="lightboxOpen"
+      v-model:index="lightboxIndex"
+      :items="allMedia"
+      @close="lightboxOpen = false"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useMediaStore } from '@/stores/media'
-import { useRouter } from 'vue-router'
+import AppIcon from '@/components/AppIcon.vue'
+import Lightbox from '@/components/Lightbox.vue'
 
 const mediaStore = useMediaStore()
-const router = useRouter()
 
 const timeline = ref([])
 const allMedia = ref([])
 const expandedMonths = ref([]) // 已展开的月份，格式 "年-月"
 const expandedYears = ref([]) // 已展开的年份
+const lightboxOpen = ref(false)
+const lightboxIndex = ref(0)
 
 // 每个月默认显示的张数，超出部分折叠，点击"查看全部"展开
 const COLLAPSED_COUNT = 12
@@ -129,8 +149,13 @@ function visibleItems(mg) {
   return isMonthExpanded(mg.year, mg.month) ? mg.items : mg.items.slice(0, COLLAPSED_COUNT)
 }
 
-function goDetail(id) {
-  router.push(`/media/${id}`)
+// 点击照片：打开灯箱（在全部媒体列表里定位当前项）
+function openLightbox(id) {
+  const i = allMedia.value.findIndex((m) => m.id === id)
+  if (i > -1) {
+    lightboxIndex.value = i
+    lightboxOpen.value = true
+  }
 }
 
 function formatShortDate(dateStr) {
@@ -144,41 +169,51 @@ function formatShortDate(dateStr) {
 .timeline-page {
   max-width: 900px;
   margin: 0 auto;
-  padding: 24px;
+  padding: $space-6 $space-5 $space-8;
+}
+
+.page-head {
+  margin-bottom: $space-6;
+}
+
+.eyebrow {
+  font-size: $text-xs;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: $text-muted;
+  margin-bottom: $space-1;
 }
 
 .page-title {
-  font-family: $font-serif;
-  font-size: 2rem;
-  margin-bottom: 32px;
+  font-size: $text-3xl;
+  font-weight: 600;
 }
 
 .timeline-container {
   position: relative;
-  padding-left: 40px;
+  padding-left: $space-6;
 
   &::before {
     content: '';
     position: absolute;
-    left: 15px;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: linear-gradient(180deg, #FF8C69, #FFB347);
-    border-radius: 2px;
+    left: 5px;
+    top: 6px;
+    bottom: 6px;
+    width: 1px;
+    background: linear-gradient(180deg, $primary, $border);
   }
 }
 
 .timeline-year {
-  margin-bottom: 32px;
+  margin-bottom: $space-6;
   position: relative;
 }
 
 .year-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: $space-3;
+  margin-bottom: $space-4;
   cursor: pointer;
   user-select: none;
 
@@ -189,9 +224,9 @@ function formatShortDate(dateStr) {
 
 .year-arrow {
   margin-left: auto;
-  font-size: 0.7rem;
+  display: inline-flex;
   color: $text-muted;
-  transition: transform 0.2s ease;
+  transition: transform 0.25s $ease-out;
 
   &.open {
     transform: rotate(90deg);
@@ -201,31 +236,33 @@ function formatShortDate(dateStr) {
 .year-dot {
   position: absolute;
   left: -33px;
-  width: 18px;
-  height: 18px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #FF8C69, #FFB347);
-  box-shadow: 0 0 0 4px rgba(255, 140, 105, 0.2);
+  background: $primary;
+  box-shadow: 0 0 0 4px $primary-soft;
   z-index: 1;
 }
 
 .year-title {
-  font-size: 1.5rem;
+  font-size: $text-2xl;
   font-weight: 600;
+  transition: $transition-fast;
 }
 
 .year-count {
-  font-size: 0.85rem;
-  color: $text-muted;
+  font-size: $text-xs;
+  color: $text-secondary;
   background: $bg-light;
   padding: 2px 12px;
   border-radius: $radius-full;
+  letter-spacing: 0.04em;
 }
 
 /* ===== 月份分组 ===== */
 .timeline-month {
   position: relative;
-  margin-bottom: 20px;
+  margin-bottom: $space-5;
 
   &:last-child {
     margin-bottom: 0;
@@ -235,30 +272,30 @@ function formatShortDate(dateStr) {
 .month-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-  padding-left: 12px;
+  gap: $space-2;
+  margin-bottom: $space-3;
+  padding-left: $space-3;
 }
 
 .month-dot {
   position: absolute;
-  left: -31px;
-  width: 10px;
-  height: 10px;
+  left: -28px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: $bg-card;
-  border: 3px solid $primary;
+  border: 2px solid $primary;
   z-index: 1;
 }
 
 .month-title {
-  font-size: 1.05rem;
+  font-size: $text-base;
   font-weight: 600;
   color: $text-secondary;
 }
 
 .month-count {
-  font-size: 0.75rem;
+  font-size: $text-xs;
   color: $text-muted;
   background: $bg-light;
   padding: 1px 10px;
@@ -267,32 +304,36 @@ function formatShortDate(dateStr) {
 
 /* 月份照片较多时的展开/收起 */
 .month-more {
-  padding-left: 24px;
-  margin-top: 10px;
+  padding-left: $space-5;
+  margin-top: $space-3;
 }
 
 .more-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   border: 1px solid $border;
   background: $bg-card;
   color: $text-secondary;
-  font-size: 0.8rem;
-  padding: 6px 16px;
+  font-size: $text-sm;
+  font-family: inherit;
+  padding: 6px $space-4;
   border-radius: $radius-full;
   cursor: pointer;
-  transition: $transition;
+  transition: $transition-fast;
 
   &:hover {
     border-color: $primary;
     color: $primary;
-    background: $bg-light;
+    background: $primary-soft;
   }
 }
 
 .year-media {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 12px;
-  padding-left: 24px;
+  gap: $space-3;
+  padding-left: $space-5;
 }
 
 .timeline-media-item {
@@ -301,27 +342,44 @@ function formatShortDate(dateStr) {
   cursor: pointer;
   position: relative;
   aspect-ratio: 1;
+  border: 1px solid $border;
+  background: $bg-light;
 
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: $transition;
+    transition: transform 0.5s $ease-out;
   }
 
   &:hover img {
-    transform: scale(1.05);
+    transform: scale(1.06);
   }
 }
 
 .timeline-date {
   position: absolute;
-  bottom: 4px;
-  left: 4px;
-  background: rgba(0,0,0,0.5);
-  color: white;
+  bottom: $space-1;
+  left: $space-1;
+  background: rgba(28, 25, 22, 0.62);
+  color: #fff;
   font-size: 0.65rem;
-  padding: 2px 6px;
+  padding: 2px 7px;
   border-radius: $radius-sm;
+  letter-spacing: 0.04em;
+}
+
+.empty-state {
+  text-align: center;
+  padding: $space-8 $space-5;
+  color: $text-secondary;
+
+  p {
+    margin-top: $space-4;
+  }
+}
+
+.empty-icon {
+  color: $text-muted;
 }
 </style>

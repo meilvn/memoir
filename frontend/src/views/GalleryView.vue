@@ -1,42 +1,66 @@
 <template>
   <div class="gallery-page">
-    <div class="gallery-header">
-      <h1 class="page-title">🖼 回忆画廊</h1>
+    <header class="gallery-header" data-reveal>
+      <div>
+        <p class="eyebrow">Gallery</p>
+        <h1 class="page-title serif">回忆画廊</h1>
+      </div>
       <div class="gallery-controls">
-        <select v-model="filterType" class="filter-select">
-          <option value="">全部类型</option>
-          <option value="PHOTO">📷 照片</option>
-          <option value="VIDEO">🎬 视频</option>
-        </select>
+        <div class="filter-group">
+          <AppIcon name="filter" :size="15" class="filter-icon" />
+          <select v-model="filterType" class="filter-select">
+            <option value="">全部类型</option>
+            <option value="PHOTO">照片</option>
+            <option value="VIDEO">视频</option>
+          </select>
+        </div>
         <label class="upload-btn btn btn-primary">
-          📤 上传
+          <AppIcon name="upload" :size="15" />
+          上传
           <input type="file" accept="image/*,video/*" multiple @change="handleUpload" hidden />
         </label>
       </div>
-    </div>
+    </header>
 
     <div v-if="loading" class="loading-grid">
-      <div v-for="n in 8" :key="n" class="skeleton-card skeleton"></div>
+      <div v-for="n in 8" :key="n" class="skeleton-card skeleton" />
     </div>
 
     <div v-else-if="items.length" class="masonry-gallery">
-      <div v-for="media in items" :key="media.id" class="media-card" @click="goDetail(media.id)">
+      <figure
+        v-for="(media, i) in items"
+        :key="media.id"
+        v-reveal="Math.min(i, 12) * 40"
+        class="media-card"
+        @click="openLightbox(i)"
+      >
         <img :src="mediaStore.getMediaUrl(media.thumbnailPath)" :alt="media.filename" loading="lazy" />
-        <div class="card-overlay">
-          <span class="type-badge">{{ media.mediaType === 'VIDEO' ? '🎬' : '📷' }}</span>
+        <figcaption class="card-overlay">
+          <span class="type-badge">
+            <AppIcon :name="media.mediaType === 'VIDEO' ? 'film' : 'image'" :size="13" />
+            {{ media.mediaType === 'VIDEO' ? '视频' : '照片' }}
+          </span>
           <span class="date-label">{{ formatDate(media.takenAt) }}</span>
-        </div>
-      </div>
+        </figcaption>
+      </figure>
     </div>
 
     <div v-else class="empty-state">
-      <div class="empty-icon">🖼</div>
+      <div class="empty-icon"><AppIcon name="image" :size="26" /></div>
       <p>画廊还没有照片呢</p>
       <label class="btn btn-primary">
-        📤 上传第一张照片
+        <AppIcon name="upload" :size="15" />
+        上传第一张照片
         <input type="file" accept="image/*,video/*" multiple @change="handleUpload" hidden />
       </label>
     </div>
+
+    <Lightbox
+      v-model="lightboxOpen"
+      v-model:index="lightboxIndex"
+      :items="items"
+      @close="lightboxOpen = false"
+    />
   </div>
 </template>
 
@@ -45,15 +69,17 @@ import { ref, onMounted, watch } from 'vue'
 import { useMediaStore } from '@/stores/media'
 import { mediaApi } from '@/api'
 import { useToast } from 'vue-toastification'
-import { useRouter } from 'vue-router'
+import AppIcon from '@/components/AppIcon.vue'
+import Lightbox from '@/components/Lightbox.vue'
 
 const mediaStore = useMediaStore()
-const router = useRouter()
 const toast = useToast()
 
 const items = ref([])
 const loading = ref(false)
 const filterType = ref('')
+const lightboxOpen = ref(false)
+const lightboxIndex = ref(0)
 
 onMounted(async () => {
   await loadMedia()
@@ -66,9 +92,9 @@ watch(filterType, async () => {
 async function loadMedia() {
   loading.value = true
   try {
-    const data = await mediaApi.findAll({ mediaType: filterType.value || undefined })
+    const data = await mediaApi.findAll({ mediaType: filterType.value || undefined, limit: 100 })
     items.value = data.items
-  } catch (err) {
+  } catch {
     toast.error('加载失败')
   } finally {
     loading.value = false
@@ -91,55 +117,91 @@ async function handleUpload(e) {
   await loadMedia()
 }
 
-function goDetail(id) {
-  router.push(`/media/${id}`)
+function openLightbox(i) {
+  lightboxIndex.value = i
+  lightboxOpen.value = true
 }
 
 function formatDate(dateStr) {
   if (!dateStr) return ''
   const d = new Date(dateStr)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
 }
 </script>
 
 <style scoped>
 .gallery-page {
-  padding: 24px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: $space-6 $space-5 $space-8;
 }
 
 .gallery-header {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: $space-6;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: $space-4;
+}
+
+.eyebrow {
+  font-size: $text-xs;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: $text-muted;
+  margin-bottom: $space-1;
 }
 
 .page-title {
-  font-family: $font-serif;
-  font-size: 1.8rem;
+  font-size: $text-3xl;
+  font-weight: 600;
 }
 
 .gallery-controls {
   display: flex;
-  gap: 12px;
+  gap: $space-3;
   align-items: center;
 }
 
+.filter-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.filter-icon {
+  position: absolute;
+  left: 14px;
+  color: $text-muted;
+  pointer-events: none;
+}
+
 .filter-select {
-  padding: 8px 16px;
-  border: 1.5px solid $border;
+  appearance: none;
+  padding: 9px $space-4 9px 36px;
+  border: 1px solid $border;
   border-radius: $radius-full;
   background: $bg-card;
   color: $text-primary;
-  font-size: 0.9rem;
+  font-size: $text-sm;
+  font-family: inherit;
   cursor: pointer;
+  transition: $transition-fast;
+
+  &:hover {
+    border-color: $border-strong;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $primary;
+  }
 }
 
 .masonry-gallery {
   columns: 4;
-  column-gap: 16px;
+  column-gap: $space-4;
 
   @media (max-width: 1200px) { columns: 3; }
   @media (max-width: 768px) { columns: 2; }
@@ -148,55 +210,64 @@ function formatDate(dateStr) {
 
 .media-card {
   break-inside: avoid;
-  margin-bottom: 16px;
+  margin-bottom: $space-4;
   border-radius: $radius-md;
   overflow: hidden;
   cursor: pointer;
   position: relative;
+  background: $bg-light;
+  border: 1px solid $border;
   transition: $transition;
 
   &:hover {
-    transform: translateY(-4px);
+    transform: translateY(-3px);
     box-shadow: $shadow-lg;
 
     img {
-      transform: scale(1.04);
+      transform: scale(1.03);
+    }
+
+    .card-overlay {
+      opacity: 1;
     }
   }
 
   img {
     width: 100%;
-    transition: $transition;
+    display: block;
+    transition: transform 0.6s $ease-out;
   }
 }
 
 .card-overlay {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 10px 14px;
-  background: linear-gradient(transparent, rgba(0,0,0,0.55));
+  inset: auto 0 0 0;
+  padding: $space-5 $space-3 $space-2;
+  background: linear-gradient(transparent, rgba(28, 25, 22, 0.62));
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: white;
-  font-size: 0.8rem;
+  color: #fff;
+  font-size: $text-xs;
+  opacity: 0;
+  transition: $transition;
 }
 
 .type-badge {
-  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .date-label {
-  font-size: 0.75rem;
+  letter-spacing: 0.04em;
   opacity: 0.9;
 }
 
 .loading-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: $space-4;
 
   @media (max-width: 768px) {
     grid-template-columns: repeat(2, 1fr);
@@ -206,5 +277,20 @@ function formatDate(dateStr) {
 .skeleton-card {
   aspect-ratio: 1;
   border-radius: $radius-md;
+}
+
+.empty-state {
+  text-align: center;
+  padding: $space-8 $space-5;
+  color: $text-secondary;
+
+  p {
+    margin: $space-4 0 $space-5;
+    font-size: $text-base;
+  }
+}
+
+.empty-icon {
+  color: $text-muted;
 }
 </style>
