@@ -27,6 +27,11 @@
             <option value="VIDEO">视频</option>
           </select>
         </div>
+        <select v-model="sortBy" class="filter-select sort-select">
+          <option value="newest">最新优先</option>
+          <option value="oldest">最早优先</option>
+          <option value="name">按文件名</option>
+        </select>
         <button
           class="fav-filter"
           :class="{ active: filterFav }"
@@ -90,9 +95,9 @@
       <SkeletonCard v-for="n in 12" :key="n" variant="media" showText />
     </div>
 
-    <div v-else-if="items.length" class="masonry-gallery" :class="viewMode">
+    <div v-else-if="sortedItems.length" class="masonry-gallery" :class="viewMode">
       <figure
-        v-for="(media, i) in items"
+        v-for="(media, i) in sortedItems"
         :key="media.id"
         v-reveal="Math.min(i, 12) * 40"
         class="media-card"
@@ -140,7 +145,7 @@
     <Lightbox
       v-model="lightboxOpen"
       v-model:index="lightboxIndex"
-      :items="items"
+      :items="sortedItems"
       @close="lightboxOpen = false"
       @favorite-change="onLightboxFavChange"
     />
@@ -177,10 +182,25 @@ const lightboxIndex = ref(0)
 const viewMode = ref('masonry')
 const deleteDialogOpen = ref(false)
 const deleteTarget = ref(null)
+const sortBy = ref('newest')
 let debounceTimer = null
 
 // 标签云默认展示前 12 个，展开后全部
 const visibleTags = computed(() => (tagsExpanded.value ? tags.value : tags.value.slice(0, 12)))
+
+// 排序后的媒体列表
+const sortedItems = computed(() => {
+  const list = [...items.value]
+  switch (sortBy.value) {
+    case 'oldest':
+      return list.sort((a, b) => new Date(a.takenAt) - new Date(b.takenAt))
+    case 'name':
+      return list.sort((a, b) => a.filename.localeCompare(b.filename))
+    case 'newest':
+    default:
+      return list.sort((a, b) => new Date(b.takenAt) - new Date(a.takenAt))
+  }
+})
 
 onMounted(async () => {
   await loadMedia()
@@ -556,6 +576,11 @@ function formatDate(dateStr) {
     outline: none;
     border-color: $primary;
   }
+}
+
+.sort-select {
+  padding-left: $space-3;
+  appearance: auto;
 }
 
 /* 只看收藏筛选 */
