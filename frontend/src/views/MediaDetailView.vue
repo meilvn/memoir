@@ -22,6 +22,9 @@
           <button class="btn btn-ghost copy-btn" title="复制链接" @click="copyLink">
             <AppIcon name="copy" :size="15" />
           </button>
+          <button class="btn btn-ghost danger" title="删除" @click="confirmDelete">
+            <AppIcon name="trash" :size="15" />
+          </button>
           <FavoriteButton v-model="media.isFavorite" :media-id="media.id" variant="bar" />
         </div>
       </div>
@@ -82,6 +85,8 @@
         </div>
       </div>
     </div>
+
+    <ConfirmDialog v-model="deleteOpen" @confirm="executeDelete" />
   </div>
 </template>
 
@@ -93,6 +98,7 @@ import { notesApi, mediaApi } from '@/api'
 import { useToast } from 'vue-toastification'
 import AppIcon from '@/components/AppIcon.vue'
 import FavoriteButton from '@/components/FavoriteButton.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 const route = useRoute()
 const mediaStore = useMediaStore()
@@ -106,6 +112,7 @@ const selectedMood = ref('')
 const noteTags = ref([])
 const tagInput = ref('')
 const saving = ref(false)
+const deleteOpen = ref(false)
 
 const moods = ['😊', '😂', '❤️', '🤔', '😮', '🎉']
 
@@ -180,6 +187,21 @@ function copyLink() {
   }).catch(() => {
     toast.error('复制失败，请手动复制地址栏链接')
   })
+}
+
+function confirmDelete() {
+  deleteOpen.value = true
+}
+
+async function executeDelete() {
+  if (!media.value) return
+  try {
+    await mediaStore.removeMedia(media.value.id)
+    toast.success('已删除')
+    router.push('/gallery')
+  } catch {
+    toast.error('删除失败')
+  }
 }
 </script>
 
@@ -256,6 +278,15 @@ function copyLink() {
     &:hover {
       color: $primary;
       background: $primary-soft;
+    }
+  }
+
+  .danger {
+    color: $text-muted;
+
+    &:hover {
+      color: $error;
+      background: rgba($error, 0.08);
     }
   }
 }
