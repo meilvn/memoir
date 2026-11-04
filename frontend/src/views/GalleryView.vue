@@ -169,8 +169,6 @@
         v-reveal="Math.min(i, 12) * 40"
         class="media-card"
         :class="{ selectable: batchMode, selected: selectedIds.has(media.id) }"
-        @mousemove="onCardMouseMove($event, $el)"
-        @mouseleave="onCardMouseLeave($el)"
         @click="batchMode ? toggleSelect(media, $event) : openLightbox(i)"
       >
         <div class="card-media">
@@ -331,6 +329,85 @@ function onCardMouseMove(e, el) {
   })
 }
 
+// 全局鼠标跟踪：处理鼠标在卡片间移动的情况
+let lastHoveredCard = null
+
+function handleGlobalMouseMove(e) {
+  if (batchMode.value) return
+
+  // 查找鼠标下方的 .media-card 元素
+  const card = e.target.closest('.media-card')
+
+  // 如果鼠标离开了上一个卡片
+  if (lastHoveredCard && lastHoveredCard !== card) {
+    lastHoveredCard.style.transform = ''
+  }
+
+  // 如果鼠标在一个新卡片上
+  if (card) {
+    // 节流处理
+    if (rafId) return
+
+    rafId = requestAnimationFrame(() => {
+      const rect = card.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const y = e.clientY - rect.top
+      const centerX = rect.width / 2
+      const centerY = rect.height / 2
+
+      const tiltAngle = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tilt-angle')) || 1.5
+      const tiltLift = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tilt-lift')) || -4
+      const perspective = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--perspective')) || 800
+
+      const rotateX = ((y - centerY) / centerY) * -tiltAngle
+      const rotateY = ((x - centerX) / centerX) * tiltAngle
+      card.style.transform = `perspective(${perspective}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(${tiltLift}px)`
+
+      lastHoveredCard = card
+      rafId = null
+    })
+  } else {
+    // 鼠标不在任何卡片上
+    lastHoveredCard = null
+  }
+}
+
+function handleGlobalMouseLeave() {
+  if (lastHoveredCard) {
+    lastHoveredCard.style.transform = ''
+    lastHoveredCard = null
+  }
+  if (rafId) {
+    cancelAnimationFrame(rafId)
+    rafId = null
+  }
+}
+
+// 设置全局鼠标跟踪
+let mouseTracker = null
+
+function setupGlobalMouseTracking() {
+  const gallery = document.querySelector('.masonry-gallery')
+  if (!gallery) return
+
+  mouseTracker = (e) => handleGlobalMouseMove(e)
+  const leaveTracker = () => handleGlobalMouseLeave()
+
+  gallery.addEventListener('mousemove', mouseTracker)
+  gallery.addEventListener('mouseleave', leaveTracker)
+}
+
+function cleanupGlobalMouseTracking() {
+  if (mouseTracker) {
+    const gallery = document.querySelector('.masonry-gallery')
+    if (gallery) {
+      gallery.removeEventListener('mousemove', mouseTracker)
+      gallery.removeEventListener('mouseleave', handleGlobalMouseLeave)
+    }
+    mouseTracker = null
+  }
+}
+
 function onCardMouseLeave(el) {
   if (rafId) {
     cancelAnimationFrame(rafId)
@@ -376,11 +453,14 @@ onMounted(async () => {
   loadTags()
   await nextTick()
   setupInfiniteScroll()
+  setupGlobalMouseTracking()
 })
 
 onBeforeUnmount(() => {
   if (debounceTimer) clearTimeout(debounceTimer)
   if (observer) observer.disconnect()
+  if (rafId) cancelAnimationFrame(rafId)
+  cleanupGlobalMouseTracking()
 })
 
 watch([filterType, filterFav, activeTag], async () => {
