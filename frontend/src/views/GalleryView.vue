@@ -335,17 +335,16 @@ let lastHoveredCard = null
 function handleGlobalMouseMove(e) {
   if (batchMode.value) return
 
+  // 快速检查：如果鼠标不在画廊内，直接返回
+  const gallery = document.querySelector('.masonry-gallery')
+  if (!gallery || !gallery.contains(e.target)) return
+
   // 查找鼠标下方的 .media-card 元素
   const card = e.target.closest('.media-card')
 
-  // 如果鼠标离开了上一个卡片
-  if (lastHoveredCard && lastHoveredCard !== card) {
-    lastHoveredCard.style.transform = ''
-  }
-
-  // 如果鼠标在一个新卡片上
+  // 只在鼠标真正在一个卡片上时，才应用 3D 效果
   if (card) {
-    // 节流处理
+    // 节流处理：避免在同一帧内多次更新
     if (rafId) return
 
     rafId = requestAnimationFrame(() => {
@@ -366,10 +365,9 @@ function handleGlobalMouseMove(e) {
       lastHoveredCard = card
       rafId = null
     })
-  } else {
-    // 鼠标不在任何卡片上
-    lastHoveredCard = null
   }
+  // 当鼠标在间隙中时（card === null），不执行任何操作
+  // 保持上一个卡片的 3D 效果，或者不应用任何效果
 }
 
 function handleGlobalMouseLeave() {
@@ -388,13 +386,17 @@ let mouseTracker = null
 
 function setupGlobalMouseTracking() {
   const gallery = document.querySelector('.masonry-gallery')
-  if (!gallery) return
+  if (!gallery) {
+    console.warn('❌ Gallery element not found for mouse tracking')
+    return
+  }
 
   mouseTracker = (e) => handleGlobalMouseMove(e)
   const leaveTracker = () => handleGlobalMouseLeave()
 
   gallery.addEventListener('mousemove', mouseTracker)
   gallery.addEventListener('mouseleave', leaveTracker)
+  console.log('✅ Global mouse tracking initialized on', gallery)
 }
 
 function cleanupGlobalMouseTracking() {
@@ -403,6 +405,7 @@ function cleanupGlobalMouseTracking() {
     if (gallery) {
       gallery.removeEventListener('mousemove', mouseTracker)
       gallery.removeEventListener('mouseleave', handleGlobalMouseLeave)
+      console.log('🧹 Global mouse tracking cleaned up')
     }
     mouseTracker = null
   }
@@ -453,7 +456,6 @@ onMounted(async () => {
   loadTags()
   await nextTick()
   setupInfiniteScroll()
-  setupGlobalMouseTracking()
 })
 
 onBeforeUnmount(() => {
@@ -549,6 +551,12 @@ async function loadMedia(reset = true) {
     }
     total.value = data.total
     hasMore.value = items.value.length < total.value
+
+    // 数据加载完成后，重新初始化鼠标跟踪
+    // 因为 DOM 可能因数据更新而重建
+    await nextTick()
+    cleanupGlobalMouseTracking()
+    setupGlobalMouseTracking()
   } catch {
     toast.error('加载失败')
   } finally {
