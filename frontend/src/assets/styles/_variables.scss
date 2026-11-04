@@ -71,6 +71,18 @@ $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 $transition: all 0.35s $ease-out;
 $transition-fast: all 0.2s $ease-out;
 
+// ----- 3D 效果强度（可调整以优化性能）-----
+$tilt-angle: 1.5deg;      // 倾斜角度
+$tilt-lift: -4px;         // 悬浮提升高度
+$perspective: 800px;      // 透视距离
+
+// 在 :root 中定义 CSS 自定义属性，便于 JS 读取
+:root {
+  --tilt-angle: #{$tilt-angle};
+  --tilt-lift: #{$tilt-lift};
+  --perspective: #{$perspective};
+}
+
 // ----- 渐变（增加层次）-----
 $gradient-hero: linear-gradient(135deg, $bg-warm 0%, lighten($bg-light, 1%) 100%);
 $gradient-subtle: linear-gradient(180deg, rgba($primary, 0.02) 0%, transparent 100%);

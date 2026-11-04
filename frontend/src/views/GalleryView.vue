@@ -322,10 +322,14 @@ function onCardMouseMove(e, el) {
     const y = e.clientY - rect.top
     const centerX = rect.width / 2
     const centerY = rect.height / 2
-    // 降低倾斜角度和幅度，减少卡顿
-    const rotateX = ((y - centerY) / centerY) * -1.5
-    const rotateY = ((x - centerX) / centerX) * 1.5
-    el.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`
+    // 从 CSS 变量读取参数，便于统一调整
+    const tiltAngle = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tilt-angle')) || 1.5
+    const tiltLift = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tilt-lift')) || -4
+    const perspective = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--perspective')) || 800
+
+    const rotateX = ((y - centerY) / centerY) * -tiltAngle
+    const rotateY = ((x - centerX) / centerX) * tiltAngle
+    el.style.transform = `perspective(${perspective}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(${tiltLift}px)`
     rafId = null
   })
 }
