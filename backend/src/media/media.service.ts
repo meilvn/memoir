@@ -140,9 +140,15 @@ export class MediaService {
     if (dto.favorite) qb.andWhere('m.is_favorite = 1')
 
     // 关键词搜索：文件名 + 备注内容 + 备注标签 + 心情（LEFT JOIN 保证无备注的媒体也能匹配文件名）
+    let joined = false
+    if (dto.keyword?.trim() || dto.tag) {
+      qb.leftJoin(Note, 'n', 'n.media_id = m.id')
+      joined = true
+    }
+
     if (dto.keyword?.trim()) {
       const kw = `%${dto.keyword.trim()}%`
-      qb.leftJoin(Note, 'n', 'n.media_id = m.id').andWhere(
+      qb.andWhere(
         new Brackets((w) => {
           w.where('m.filename LIKE :kw', { kw })
             .orWhere('n.content LIKE :kw', { kw })
@@ -150,6 +156,19 @@ export class MediaService {
             .orWhere('n.mood LIKE :kw', { kw })
         }),
       )
+    }
+
+    // 按标签精确筛选：tags 是 SQLite JSONB 二进制列，LIKE 无法可靠匹配，
+    // 故先在 JS 侧取出含该标签的 media_id 再用 IN 查询（相册规模下成本可忽略）
+    if (dto.tag) {
+      const notes = await this.mediaRepository.manager.find(Note, {
+        select: { mediaId: true, tags: true },
+      })
+      const ids = notes.filter((n) => (n.tags || []).includes(dto.tag as string)).map((n) => n.mediaId)
+      if (!ids.length) {
+        return { items: [], total: 0, page: dto.page || 1, limit: dto.limit || 30, totalPages: 0 }
+      }
+      qb.andWhere('m.id IN (:...ids)', { ids })
     }
 
     const page = dto.page || 1

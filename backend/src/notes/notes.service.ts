@@ -45,4 +45,19 @@ export class NotesService {
       order: { createdAt: 'DESC' },
     })
   }
+
+  // 标签云：聚合所有备注的标签及出现次数，按次数倒序
+  async getAllTags() {
+    const notes = await this.notesRepository.find({ select: { tags: true } })
+    const counter = new Map()
+    for (const n of notes) {
+      for (const t of n.tags || []) {
+        const tag = String(t).trim()
+        if (tag) counter.set(tag, (counter.get(tag) || 0) + 1)
+      }
+    }
+    return [...counter.entries()]
+      .map(([tag, count]) => ({ tag, count }))
+      .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag))
+  }
 }

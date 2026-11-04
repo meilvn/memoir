@@ -44,8 +44,37 @@
       </div>
     </header>
 
+    <!-- 标签云 -->
+    <section v-if="tags.length" class="tag-cloud" data-reveal>
+      <div class="tag-cloud-head">
+        <span class="tag-cloud-title"><AppIcon name="tag" :size="14" />标签</span>
+        <button class="tag-cloud-toggle" @click="tagsExpanded = !tagsExpanded">
+          {{ tagsExpanded ? '收起' : `展开全部 ${tags.length} 个` }}
+          <AppIcon :name="tagsExpanded ? 'chevronUp' : 'chevronDown'" :size="13" />
+        </button>
+      </div>
+      <div class="tag-list" :class="{ collapsed: !tagsExpanded && tags.length > 12 }">
+        <button
+          v-for="t in visibleTags"
+          :key="t.tag"
+          class="tag-chip"
+          :class="{ active: activeTag === t.tag }"
+          @click="toggleTag(t.tag)"
+        >
+          {{ t.tag }}
+          <span class="tag-count">{{ t.count }}</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 生效的标签筛选提示 -->
+    <div v-if="activeTag && !loading" class="result-bar">
+      标签「<strong>{{ activeTag }}</strong>」下的回忆
+      <button class="result-clear" @click="activeTag = ''">清除</button>
+    </div>
+
     <!-- 搜索结果提示条 -->
-    <div v-if="keyword && !loading" class="result-bar">
+    <div v-else-if="keyword && !loading" class="result-bar">
       找到 <strong>{{ total }}</strong> 条与「{{ keyword }}」相关的回忆
     </div>
 
@@ -104,9 +133,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useMediaStore } from '@/stores/media'
-import { mediaApi } from '@/api'
+import { mediaApi, notesApi } from '@/api'
 import { useToast } from 'vue-toastification'
 import AppIcon from '@/components/AppIcon.vue'
 import Lightbox from '@/components/Lightbox.vue'
@@ -121,21 +150,42 @@ const total = ref(0)
 const filterType = ref('')
 const filterFav = ref(false)
 const keyword = ref('')
+const activeTag = ref('')
+const tags = ref([])
+const tagsExpanded = ref(false)
 const lightboxOpen = ref(false)
 const lightboxIndex = ref(0)
 let debounceTimer = null
 
+// 标签云默认展示前 12 个，展开后全部
+const visibleTags = computed(() => (tagsExpanded.value ? tags.value : tags.value.slice(0, 12)))
+
 onMounted(async () => {
   await loadMedia()
+  loadTags()
 })
 
 onBeforeUnmount(() => {
   if (debounceTimer) clearTimeout(debounceTimer)
 })
 
-watch([filterType, filterFav], async () => {
+watch([filterType, filterFav, activeTag], async () => {
   await loadMedia()
 })
+
+async function loadTags() {
+  try {
+    tags.value = await notesApi.getTags()
+  } catch {
+    tags.value = []
+  }
+}
+
+// 点击标签：再点一次取消；与关键词互斥（避免两个"搜索"概念混淆）
+function toggleTag(tag) {
+  activeTag.value = activeTag.value === tag ? '' : tag
+  if (activeTag.value) keyword.value = ''
+}
 
 // 搜索输入防抖：停止输入 300ms 后再请求，避免每敲一个字都打接口
 function onKeywordInput() {
@@ -152,6 +202,7 @@ function resetFilters() {
   keyword.value = ''
   filterType.value = ''
   filterFav.value = false
+  activeTag.value = ''
   loadMedia()
 }
 
@@ -162,6 +213,7 @@ async function loadMedia() {
       mediaType: filterType.value || undefined,
       favorite: filterFav.value || undefined,
       keyword: keyword.value.trim() || undefined,
+      tag: activeTag.value || undefined,
       limit: 100,
     })
     items.value = data.items
@@ -325,6 +377,110 @@ function formatDate(dateStr) {
     color: $primary;
     font-weight: 600;
   }
+}
+
+.result-clear {
+  margin-left: $space-3;
+  border: none;
+  background: none;
+  color: $primary;
+  font-size: $text-xs;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:hover {
+    color: $primary-dark;
+  }
+}
+
+/* ===== 标签云 ===== */
+.tag-cloud {
+  margin-bottom: $space-5;
+  padding: $space-4 $space-5;
+  background: $bg-card;
+  border: 1px solid $border;
+  border-radius: $radius-md;
+}
+
+.tag-cloud-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $space-3;
+}
+
+.tag-cloud-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: $text-sm;
+  font-weight: 600;
+  color: $text-secondary;
+}
+
+.tag-cloud-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: none;
+  color: $text-muted;
+  font-size: $text-xs;
+  font-family: inherit;
+  cursor: pointer;
+  transition: $transition-fast;
+
+  &:hover {
+    color: $primary;
+  }
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+
+  /* 未展开时限制高度，超出渐隐 */
+  &.collapsed {
+    max-height: 68px;
+    overflow: hidden;
+    mask-image: linear-gradient(180deg, #000 60%, transparent);
+  }
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px $space-3;
+  border: 1px solid $border;
+  border-radius: $radius-full;
+  background: $bg-warm;
+  color: $text-secondary;
+  font-size: $text-sm;
+  font-family: inherit;
+  cursor: pointer;
+  transition: $transition-fast;
+
+  &:hover {
+    border-color: $primary;
+    color: $primary;
+    background: $primary-soft;
+  }
+
+  &.active {
+    background: $primary;
+    border-color: $primary;
+    color: #fff;
+  }
+}
+
+.tag-count {
+  font-size: $text-xs;
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
 }
 
 .filter-group {

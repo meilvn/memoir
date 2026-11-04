@@ -17,6 +17,12 @@ export class NotesController {
     return this.notesService.findMyNotes(user.sub)
   }
 
+  // 标签云：所有标签及使用次数
+  @Get('tags')
+  getAllTags() {
+    return this.notesService.getAllTags()
+  }
+
   @Get(':mediaId')
   findByMedia(@Param('mediaId') mediaId: string) {
     return this.notesService.findByMedia(mediaId)

@@ -64,6 +64,7 @@ export const notesApi = {
   upsert: (data) => api.post('/notes', data),
   findByMedia: (mediaId) => api.get(`/notes/${mediaId}`),
   findMy: () => api.get('/notes/my'),
+  getTags: () => api.get('/notes/tags'),
 }
 
 export const usersApi = {

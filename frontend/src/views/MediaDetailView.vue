@@ -32,6 +32,24 @@
 
         <div v-if="editingNote" class="note-editor">
           <textarea v-model="noteContent" placeholder="写下你的感想..." rows="4"></textarea>
+
+          <!-- 标签输入：回车/逗号添加，点 × 移除 -->
+          <div class="tag-editor">
+            <span v-for="(t, i) in noteTags" :key="t" class="tag-pill">
+              #{{ t }}
+              <button class="tag-pill-x" @click="noteTags.splice(i, 1)">×</button>
+            </span>
+            <input
+              v-model="tagInput"
+              class="tag-input"
+              placeholder="添加标签后回车（如：春节、旅行）"
+              @keydown.enter.prevent="addTag"
+              @keydown.189.prevent="addTag"
+              @keydown.,.prevent="addTag"
+              @blur="addTag"
+            />
+          </div>
+
           <div class="note-meta">
             <div class="mood-selector">
               <span v-for="mood in moods" :key="mood" class="mood-option" :class="{ selected: selectedMood === mood }" @click="selectedMood = mood">
@@ -48,7 +66,9 @@
           <p class="note-content">{{ note.content }}</p>
           <div class="note-tags" v-if="note.mood || note.tags?.length">
             <span v-if="note.mood" class="mood-tag">{{ note.mood }}</span>
-            <span v-for="tag in note.tags" :key="tag" class="custom-tag">#{{ tag }}</span>
+            <span v-for="tag in note.tags" :key="tag" class="custom-tag">
+              <AppIcon name="tag" :size="11" />{{ tag }}
+            </span>
           </div>
         </div>
         <div v-else class="no-note">
@@ -77,6 +97,8 @@ const note = ref(null)
 const editingNote = ref(false)
 const noteContent = ref('')
 const selectedMood = ref('')
+const noteTags = ref([])
+const tagInput = ref('')
 const saving = ref(false)
 
 const moods = ['😊', '😂', '❤️', '🤔', '😮', '🎉']
@@ -91,9 +113,20 @@ async function loadNote() {
     note.value = await notesApi.findByMedia(route.params.id)
     noteContent.value = note.value.content
     selectedMood.value = note.value.mood || ''
+    noteTags.value = [...(note.value.tags || [])]
   } catch {
     note.value = null
+    noteTags.value = []
   }
+}
+
+// 添加标签：去空白、去重、限长
+function addTag() {
+  const t = tagInput.value.trim().replace(/^#/, '')
+  if (t && !noteTags.value.includes(t) && noteTags.value.length < 10) {
+    noteTags.value.push(t.slice(0, 20))
+  }
+  tagInput.value = ''
 }
 
 async function saveNote() {
@@ -103,7 +136,7 @@ async function saveNote() {
       mediaId: route.params.id,
       content: noteContent.value,
       mood: selectedMood.value || null,
-      tags: [],
+      tags: noteTags.value,
     })
     toast.success('备注已保存 💕')
     editingNote.value = false
@@ -207,11 +240,80 @@ function formatDate(dateStr) {
 .note-editor {
   textarea {
     width: 100%;
-    padding: 12px;
-    border: 1.5px solid $border;
+    padding: $space-3;
+    border: 1px solid $border;
     border-radius: $radius-sm;
     resize: vertical;
-    margin-bottom: 12px;
+    margin-bottom: $space-3;
+    font-family: inherit;
+    font-size: $text-base;
+    line-height: 1.7;
+    color: $text-primary;
+    background: $bg-warm;
+
+    &:focus {
+      outline: none;
+      border-color: $primary;
+    }
+  }
+}
+
+/* ===== 标签编辑器 ===== */
+.tag-editor {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: $space-2 $space-3;
+  border: 1px dashed $border-strong;
+  border-radius: $radius-sm;
+  margin-bottom: $space-3;
+  background: $bg-warm;
+}
+
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px 3px 10px;
+  background: $primary-soft;
+  color: $primary;
+  border-radius: $radius-full;
+  font-size: $text-xs;
+}
+
+.tag-pill-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border: none;
+  border-radius: $radius-full;
+  background: rgba($primary, 0.16);
+  color: $primary;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    background: $primary;
+    color: #fff;
+  }
+}
+
+.tag-input {
+  flex: 1;
+  min-width: 180px;
+  border: none;
+  background: none;
+  outline: none;
+  font-size: $text-sm;
+  font-family: inherit;
+  color: $text-primary;
+
+  &::placeholder {
+    color: $text-muted;
   }
 }
 
@@ -258,11 +360,14 @@ function formatDate(dateStr) {
   }
 
   .custom-tag {
-    background: rgba($primary, 0.08);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: $primary-soft;
     color: $primary;
     padding: 4px 12px;
     border-radius: $radius-full;
-    font-size: 0.8rem;
+    font-size: $text-xs;
   }
 }
 
