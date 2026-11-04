@@ -178,6 +178,7 @@
             :src="mediaStore.getMediaUrl(media.thumbnailPath)"
             :alt="media.filename"
             loading="lazy"
+            :data-media-id="media.id"
             :class="[
               'card-img',
               { hidden: media.mediaType === 'VIDEO' && videoHovering.has(media.id) },
@@ -265,7 +266,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { ref, shallowRef, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useMediaStore } from '@/stores/media'
 import { mediaApi, notesApi } from '@/api'
 import { useToast } from 'vue-toastification'
@@ -297,7 +298,8 @@ const deleteTarget = ref(null)
 const batchMode = ref(false)
 const selectedIds = ref(new Set())
 const videoHovering = ref(new Set())
-const imageLoaded = ref(new Set())
+// 使用 shallowRef 避免 Set 内部变化触发不必要的组件重新渲染
+const imageLoaded = shallowRef(new Set())
 const hasMore = ref(true)
 const scrollSentinel = ref(null)
 let observer = null
@@ -577,7 +579,19 @@ function onVideoHover(mediaId, entering) {
 }
 
 function onImageLoad(mediaId) {
+  // 更新响应式数据（使用 shallowRef，不会触发重新渲染）
   imageLoaded.value.add(mediaId)
+
+  // 手动更新 DOM 类名，避免组件重新渲染导致 3D transform 丢失
+  const img = document.querySelector(`img[data-media-id="${mediaId}"]`)
+  if (img) {
+    img.classList.add('loaded')
+    // 移除 shimmer
+    const shimmer = img.parentElement?.querySelector('.img-shimmer')
+    if (shimmer) {
+      shimmer.style.display = 'none'
+    }
+  }
 }
 
 async function executeDelete() {
