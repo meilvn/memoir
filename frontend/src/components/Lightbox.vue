@@ -379,6 +379,7 @@ watch(() => props.index, resetZoom)
   justify-content: space-between;
   padding: $space-4 $space-6;
   flex-shrink: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, transparent 100%);
 }
 
 .lb-counter {
@@ -612,7 +613,7 @@ watch(() => props.index, resetZoom)
   height: 44px;
   flex-shrink: 0;
   padding: 0;
-  border: 1px solid transparent;
+  border: 2px solid transparent;
   border-radius: $radius-sm;
   overflow: hidden;
   cursor: pointer;
@@ -625,6 +626,7 @@ watch(() => props.index, resetZoom)
     height: 100%;
     object-fit: cover;
     display: block;
+    transition: transform 0.3s ease;
   }
 
   .strip-dur {
@@ -647,6 +649,11 @@ watch(() => props.index, resetZoom)
   &.active {
     opacity: 1;
     border-color: $primary;
+    box-shadow: 0 0 12px rgba($primary, 0.4), inset 0 0 0 1px rgba($primary, 0.2);
+
+    img {
+      transform: scale(1.05);
+    }
   }
 }
 
