@@ -256,10 +256,11 @@ img {
   border-radius: $radius-md;
   padding: $space-5;
   transition: $transition;
+  box-shadow: $shadow-sm;
 
   &:hover {
     border-color: $border-strong;
-    box-shadow: $shadow-md;
+    box-shadow: $shadow-md, 0 0 0 1px rgba($primary, 0.05);
   }
 }
 
@@ -290,19 +291,25 @@ img {
 }
 
 .btn-primary {
-  background: $primary;
+  background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
   color: white;
   box-shadow: 0 2px 8px rgba($primary, 0.25);
 
   &:hover {
-    background: $primary-dark;
+    background: linear-gradient(135deg, $primary-dark 0%, darken($primary-dark, 5%) 100%);
     box-shadow: 0 4px 12px rgba($primary, 0.35);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 
   &:disabled {
     background: $text-muted;
     cursor: not-allowed;
     box-shadow: none;
+    transform: none;
   }
 }
 
@@ -313,7 +320,12 @@ img {
 
   &:hover {
     border-color: $primary;
-    background: $primary-soft;
+    background: linear-gradient(135deg, rgba($primary, 0.06) 0%, rgba($primary, 0.02) 100%);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 }
 
@@ -391,21 +403,25 @@ img {
   text-align: center;
   padding: $space-8 $space-5;
   color: $text-muted;
+  background: linear-gradient(135deg, rgba($primary, 0.02) 0%, transparent 100%);
+  border-radius: $radius-lg;
+  border: 1px dashed $border;
 
   .empty-icon {
     width: 56px;
     height: 56px;
     margin: 0 auto $space-4;
     border-radius: 50%;
-    background: $bg-light;
+    background: linear-gradient(135deg, $primary-soft 0%, rgba($primary, 0.04) 100%);
     display: grid;
     place-items: center;
-    color: $text-muted;
+    color: $primary;
   }
 
   p {
     font-size: $text-base;
     margin-bottom: $space-4;
+    color: $text-secondary;
   }
 }
 
