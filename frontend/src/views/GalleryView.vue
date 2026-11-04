@@ -220,13 +220,28 @@ const lightboxIndex = ref(0)
 const viewMode = ref('masonry')
 const deleteDialogOpen = ref(false)
 const deleteTarget = ref(null)
-const sortBy = ref('newest')
 const batchMode = ref(false)
 const selectedIds = ref(new Set())
 const hasMore = ref(true)
 const scrollSentinel = ref(null)
 let observer = null
+const sortBy = ref('newest')
 let debounceTimer = null
+try {
+  const saved = JSON.parse(localStorage.getItem('gallery-prefs') || '{}')
+  if (saved.viewMode) viewMode.value = saved.viewMode
+  if (saved.sortBy) sortBy.value = saved.sortBy
+} catch {
+  // ignore
+}
+
+// 监听偏好变化并持久化
+watch([viewMode, sortBy], () => {
+  localStorage.setItem('gallery-prefs', JSON.stringify({
+    viewMode: viewMode.value,
+    sortBy: sortBy.value,
+  }))
+})
 
 // 标签云默认展示前 12 个，展开后全部
 const visibleTags = computed(() => (tagsExpanded.value ? tags.value : tags.value.slice(0, 12)))
