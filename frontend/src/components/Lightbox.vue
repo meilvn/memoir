@@ -17,6 +17,9 @@
               class="lb-fav"
               @change="onFavChange"
             />
+            <button class="lb-btn" title="复制链接" @click="copyCurrentLink">
+              <AppIcon name="copy" :size="16" />
+            </button>
             <button class="lb-btn" title="下载原图" @click="downloadCurrent">
               <AppIcon name="download" :size="16" />
             </button>
@@ -191,6 +194,16 @@ function downloadCurrent() {
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
+}
+
+function copyCurrentLink() {
+  if (!current.value) return
+  const url = `${window.location.origin}/media/${current.value.id}`
+  navigator.clipboard.writeText(url).then(() => {
+    // 成功复制，静默处理
+  }).catch(() => {
+    // 静默失败
+  })
 }
 
 function toggleSlideshow() {

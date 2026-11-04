@@ -19,6 +19,9 @@
           <button class="btn btn-ghost download-btn" title="下载原图" @click="downloadMedia">
             <AppIcon name="download" :size="15" />
           </button>
+          <button class="btn btn-ghost copy-btn" title="复制链接" @click="copyLink">
+            <AppIcon name="copy" :size="15" />
+          </button>
           <FavoriteButton v-model="media.isFavorite" :media-id="media.id" variant="bar" />
         </div>
       </div>
@@ -168,6 +171,16 @@ function downloadMedia() {
   a.click()
   document.body.removeChild(a)
 }
+
+function copyLink() {
+  if (!media.value) return
+  const url = `${window.location.origin}/media/${media.value.id}`
+  navigator.clipboard.writeText(url).then(() => {
+    toast.success('链接已复制到剪贴板')
+  }).catch(() => {
+    toast.error('复制失败，请手动复制地址栏链接')
+  })
+}
 </script>
 
 <style scoped lang="scss">
@@ -229,6 +242,15 @@ function downloadMedia() {
   flex-shrink: 0;
 
   .download-btn {
+    color: $text-muted;
+
+    &:hover {
+      color: $primary;
+      background: $primary-soft;
+    }
+  }
+
+  .copy-btn {
     color: $text-muted;
 
     &:hover {
