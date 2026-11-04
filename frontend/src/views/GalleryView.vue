@@ -57,6 +57,10 @@
         >
           <AppIcon name="check" :size="15" />
         </button>
+        <router-link to="/upload" class="upload-trigger" title="上传回忆">
+          <AppIcon name="upload" :size="16" />
+          <span>上传</span>
+        </router-link>
         <label class="upload-btn btn btn-primary">
           <AppIcon name="upload" :size="15" />
           上传
@@ -540,6 +544,27 @@ function formatDuration(seconds) {
   gap: $space-3;
   align-items: center;
   flex-wrap: wrap;
+}
+
+.upload-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: $radius-full;
+  background: $primary;
+  color: #fff;
+  font-size: $text-sm;
+  font-weight: 500;
+  text-decoration: none;
+  transition: $transition;
+  box-shadow: 0 2px 8px rgba($primary, 0.25);
+
+  &:hover {
+    background: $primary-dark;
+    box-shadow: 0 4px 12px rgba($primary, 0.35);
+    transform: translateY(-1px);
+  }
 }
 
 /* ===== 搜索框 ===== */

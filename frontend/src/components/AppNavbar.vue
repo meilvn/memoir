@@ -70,6 +70,7 @@ const avatarText = computed(
 const navLinks = [
   { to: '/', icon: 'home', label: '首页' },
   { to: '/gallery', icon: 'image', label: '画廊' },
+  { to: '/upload', icon: 'upload', label: '上传' },
   { to: '/stories', icon: 'book', label: '故事' },
   { to: '/timeline', icon: 'clock', label: '时间线' },
   { to: '/stats', icon: 'chart', label: '洞察' },

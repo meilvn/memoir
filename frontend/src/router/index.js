@@ -57,6 +57,12 @@ const routes = [
     meta: { title: '回忆洞察', requiresAuth: true },
   },
   {
+    path: '/upload',
+    name: 'Upload',
+    component: () => import('@/views/UploadView.vue'),
+    meta: { title: '上传回忆', requiresAuth: true },
+  },
+  {
     path: '/settings',
     name: 'Settings',
     component: () => import('@/views/SettingsView.vue'),
