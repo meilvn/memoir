@@ -16,6 +16,9 @@
         </div>
         <div class="info-side">
           <span class="media-date">{{ media.filename }}</span>
+          <button class="btn btn-ghost download-btn" title="下载原图" @click="downloadMedia">
+            <AppIcon name="download" :size="15" />
+          </button>
           <FavoriteButton v-model="media.isFavorite" :media-id="media.id" variant="bar" />
         </div>
       </div>
@@ -153,6 +156,18 @@ function formatDate(dateStr) {
   const d = new Date(dateStr)
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
 }
+
+function downloadMedia() {
+  if (!media.value) return
+  const url = mediaStore.getMediaUrl(media.value.originalPath)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = media.value.filename
+  a.target = '_blank'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+}
 </script>
 
 <style scoped lang="scss">
@@ -212,6 +227,15 @@ function formatDate(dateStr) {
   align-items: center;
   gap: $space-3;
   flex-shrink: 0;
+
+  .download-btn {
+    color: $text-muted;
+
+    &:hover {
+      color: $primary;
+      background: $primary-soft;
+    }
+  }
 }
 
 .eyebrow {

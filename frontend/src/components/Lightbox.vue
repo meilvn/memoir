@@ -17,6 +17,9 @@
               class="lb-fav"
               @change="onFavChange"
             />
+            <button class="lb-btn" title="下载原图" @click="downloadCurrent">
+              <AppIcon name="download" :size="16" />
+            </button>
             <button class="lb-btn" :class="{ active: slideshow }" title="幻灯片播放" @click="toggleSlideshow">
               <AppIcon :name="slideshow ? 'pause' : 'play'" :size="17" />
             </button>
@@ -176,6 +179,18 @@ function close() {
 
 function goDetail() {
   if (current.value) router.push(`/media/${current.value.id}`)
+}
+
+function downloadCurrent() {
+  if (!current.value) return
+  const url = mediaStore.getMediaUrl(current.value.originalPath)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = current.value.filename
+  a.target = '_blank'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
 }
 
 function toggleSlideshow() {
