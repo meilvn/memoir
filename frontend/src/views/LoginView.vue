@@ -20,7 +20,12 @@
         </div>
         <div class="form-group">
           <label>密码</label>
-          <input v-model="password" type="password" placeholder="请输入密码" required />
+          <div class="input-wrap">
+            <input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="请输入密码" required />
+            <button type="button" class="input-toggle" @click="showPassword = !showPassword">
+              <AppIcon :name="showPassword ? 'eye-off' : 'eye'" :size="16" />
+            </button>
+          </div>
         </div>
         <button type="submit" class="btn btn-primary login-btn" :disabled="loading">
           {{ loading ? '登录中...' : '登录' }}
@@ -39,6 +44,7 @@ import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'vue-toastification'
+import AppIcon from '@/components/AppIcon.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -48,6 +54,7 @@ const toast = useToast()
 const identifier = ref('')
 const password = ref('')
 const loading = ref(false)
+const showPassword = ref(false)
 
 async function handleLogin() {
   try {
@@ -150,6 +157,30 @@ async function handleLogin() {
   padding: 14px;
   font-size: 1rem;
   margin-top: 8px;
+}
+
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-toggle {
+  position: absolute;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: none;
+  background: none;
+  color: $text-muted;
+  cursor: pointer;
+  transition: $transition-fast;
+
+  &:hover {
+    color: $text-primary;
+  }
 }
 
 .login-footer {

@@ -24,7 +24,12 @@
         </div>
         <div class="form-group">
           <label>密码</label>
-          <input v-model="password" type="password" placeholder="请输入密码（至少6个字符）" required minlength="6" />
+          <div class="input-wrap">
+            <input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="请输入密码（至少6个字符）" required minlength="6" />
+            <button type="button" class="input-toggle" @click="showPassword = !showPassword">
+              <AppIcon :name="showPassword ? 'eyeOff' : 'eye'" :size="16" />
+            </button>
+          </div>
           <div class="password-strength">
             <span :class="['strength-dot', strengthClass]"></span>
             <span class="strength-text">{{ strengthText }}</span>
@@ -47,6 +52,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'vue-toastification'
+import AppIcon from '@/components/AppIcon.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -56,6 +62,7 @@ const username = ref('')
 const email = ref('')
 const password = ref('')
 const loading = ref(false)
+const showPassword = ref(false)
 
 const strengthClass = computed(() => {
   const len = password.value.length
@@ -192,6 +199,30 @@ async function handleRegister() {
   padding: 14px;
   font-size: 1rem;
   margin-top: 8px;
+}
+
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-toggle {
+  position: absolute;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: none;
+  background: none;
+  color: $text-muted;
+  cursor: pointer;
+  transition: $transition-fast;
+
+  &:hover {
+    color: $text-primary;
+  }
 }
 
 .register-footer {
