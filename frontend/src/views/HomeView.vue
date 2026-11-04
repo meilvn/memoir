@@ -226,6 +226,9 @@ function formatDate(dateStr) {
   padding: $space-7 0 $space-6;
   position: relative;
   z-index: 1;
+  background: $gradient-hero;
+  border-radius: $radius-lg;
+  margin-bottom: $space-6;
 
   header {
     transition: transform 0.1s linear;

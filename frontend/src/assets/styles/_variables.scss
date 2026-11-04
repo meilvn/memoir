@@ -1,20 +1,22 @@
-// ===== 设计变量（暖纸档案风 / editorial memoir）=====
+// ===== 设计变量（温暖档案馆 / editorial memoir）=====
 // 通过 vite.config.js 的 additionalData 自动注入到所有样式块
 
 // ----- 色彩 -----
-$primary: #C96F4A; // 陶土色：沉静的红陶土，取代高饱和橙
+$primary: #C96F4A; // 陶土色：沉静的红陶土，温暖且不刺眼
 $primary-light: #E09B7D;
 $primary-dark: #A85635;
 $primary-soft: rgba($primary, 0.08);
+$primary-ghost: rgba($primary, 0.04);
 
-$bg-warm: #FAF7F2; // 纸色背景
-$bg-light: #F2EDE4;
-$bg-card: #FFFFFF;
+$bg-warm: #F8F5F0; // 暖色背景：比纯白更有温度
+$bg-light: #F0EBE4; // 次级背景
+$bg-card: #FFFFFF; // 纯白卡片，强对比
 $bg-ink: #2D2A26; // 深墨色（用于反白区域）
 
-$text-primary: #2D2A26;
-$text-secondary: #6B645C;
-$text-muted: #A79E93;
+// 增强对比度的文字颜色
+$text-primary: #1A1A1A; // 接近纯黑，确保可读性
+$text-secondary: #5A5A5A; // 中灰，层次分明
+$text-muted: #8A8580; // 浅灰，弱化但不失清晰
 
 $success: #5B9A6E;
 $error: #C05B4D;
@@ -22,12 +24,14 @@ $error: #C05B4D;
 $accent-mint: #A8D8A8;
 $accent-pink: #FFD1DC;
 
-$border: #E8E0D5;
-$border-strong: #D8CCBC;
+// 增强可见性的边框
+$border: #E5DDD2;
+$border-strong: #D0C4B5;
 
 // ----- 字体 -----
 $font-serif: 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', 'SimSun', serif;
 $font-sans: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+$font-mono: 'SF Mono', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
 
 // ----- 字号阶 -----
 $text-xs: 0.75rem;
@@ -57,12 +61,16 @@ $radius-lg: 16px;
 $radius-xl: 24px;
 $radius-full: 999px;
 
-// ----- 阴影（轻、分层、不抢戏）-----
-$shadow-sm: 0 1px 2px rgba(45, 42, 38, 0.04), 0 1px 3px rgba(45, 42, 38, 0.05);
-$shadow-md: 0 4px 14px rgba(45, 42, 38, 0.08);
-$shadow-lg: 0 14px 36px rgba(45, 42, 38, 0.13);
+// ----- 阴影（增强层次感）-----
+$shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+$shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
 
 // ----- 动效（克制的缓动）-----
 $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 $transition: all 0.35s $ease-out;
 $transition-fast: all 0.2s $ease-out;
+
+// ----- 渐变（增加层次）-----
+$gradient-hero: linear-gradient(135deg, $bg-warm 0%, lighten($bg-light, 1%) 100%);
+$gradient-subtle: linear-gradient(180deg, rgba($primary, 0.02) 0%, transparent 100%);
