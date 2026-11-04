@@ -44,6 +44,12 @@ export class MediaController {
     return this.mediaService.getTimeline()
   }
 
+  // 统计洞察页数据
+  @Get('stats')
+  getStats() {
+    return this.mediaService.getStats()
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.mediaService.findOne(id)

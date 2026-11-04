@@ -51,6 +51,12 @@ const routes = [
     meta: { title: '时间线', requiresAuth: true },
   },
   {
+    path: '/stats',
+    name: 'Stats',
+    component: () => import('@/views/StatsView.vue'),
+    meta: { title: '回忆洞察', requiresAuth: true },
+  },
+  {
     path: '/settings',
     name: 'Settings',
     component: () => import('@/views/SettingsView.vue'),

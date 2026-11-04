@@ -17,6 +17,9 @@
       <router-link to="/timeline" class="nav-link">
         <AppIcon name="clock" :size="16" />时间线
       </router-link>
+      <router-link to="/stats" class="nav-link">
+        <AppIcon name="chart" :size="16" />洞察
+      </router-link>
     </div>
     <div class="nav-actions">
       <router-link to="/settings" class="avatar" :title="userStore.user?.nickname || userStore.user?.username">

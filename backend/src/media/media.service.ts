@@ -224,8 +224,64 @@ export class MediaService {
       .getMany()
   }
 
-  async getMonths(year: number) {
-    const result = await this.mediaRepository
+  // 统计洞察：总量、类型、收藏、存储、年度分布、月度活跃、标签数、时间跨度
+  async getStats() {
+    const row = async (sql: string, ...args: any[]) =>
+      (await this.mediaRepository.query(sql, args))[0]
+
+    const total = (await row('SELECT COUNT(*) c FROM media')).c as number
+    if (!total) {
+      return {
+        total: 0, photos: 0, videos: 0, favorites: 0,
+        storageBytes: 0, years: [], yearMax: 0,
+        busiestMonth: null, span: null, tagCount: 0, noteCount: 0,
+      }
+    }
+
+    const byType = await this.mediaRepository.query(
+      'SELECT media_type t, COUNT(*) c FROM media GROUP BY media_type',
+    )
+    const fav = (await row('SELECT COUNT(*) c FROM media WHERE is_favorite = 1')).c as number
+    const storage = (await row('SELECT COALESCE(SUM(file_size), 0) s FROM media')).s as number
+    const years = await this.mediaRepository.query(
+      'SELECT year y, COUNT(*) c FROM media GROUP BY year ORDER BY y',
+    )
+    // 月度活跃：跨所有年份统计"几月最常有记录"
+    const months = await this.mediaRepository.query(
+      'SELECT month m, COUNT(*) c FROM media GROUP BY month ORDER BY c DESC, m',
+    )
+    const span = await this.mediaRepository.query(
+      'SELECT MIN(year) minY, MAX(year) maxY FROM media',
+    )
+    const noteCount = (await row('SELECT COUNT(*) c FROM notes')).c as number
+
+    // 标签去重数：必须走实体仓库（query() 返回的是 JSONB 二进制 Buffer，无法 JSON.parse）
+    const noteRows = await this.mediaRepository.manager.find(Note, {
+      select: { tags: true },
+    })
+    const tagSet = new Set<string>()
+    for (const n of noteRows) {
+      for (const t of n.tags || []) if (t) tagSet.add(String(t))
+    }
+
+    return {
+      total,
+      photos: Number(byType.find((r: any) => r.t === 'PHOTO')?.c || 0),
+      videos: Number(byType.find((r: any) => r.t === 'VIDEO')?.c || 0),
+      favorites: Number(fav),
+      storageBytes: Number(storage),
+      years: years.map((r: any) => ({ year: Number(r.y), count: Number(r.c) })),
+      yearMax: Math.max(...years.map((r: any) => Number(r.c))),
+      busiestMonth: months[0]
+        ? { month: Number(months[0].m), count: Number(months[0].c) }
+        : null,
+      span: span[0] ? { from: Number(span[0].minY), to: Number(span[0].maxY) } : null,
+      tagCount: tagSet.size,
+      noteCount: Number(noteCount),
+    }
+  }
+
+  async getMonths(year: number) {    const result = await this.mediaRepository
       .createQueryBuilder('m')
       .select('DISTINCT m.month', 'month')
       .addSelect('COUNT(*)', 'count')

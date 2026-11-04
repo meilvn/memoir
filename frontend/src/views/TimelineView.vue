@@ -60,11 +60,13 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useMediaStore } from '@/stores/media'
 import AppIcon from '@/components/AppIcon.vue'
 import Lightbox from '@/components/Lightbox.vue'
 
 const mediaStore = useMediaStore()
+const route = useRoute()
 
 const timeline = ref([])
 const allMedia = ref([])
@@ -79,8 +81,11 @@ const COLLAPSED_COUNT = 12
 onMounted(async () => {
   timeline.value = await mediaStore.fetchTimeline()
   await loadAllMedia()
-  // 默认只展开最近一年（timeline 按年份倒序，第一个即最近）
-  if (timeline.value.length) {
+  // 支持 ?year=2019 从统计页跳转过来；默认只展开最近一年（timeline 按年份倒序）
+  const want = Number(route.query.year)
+  if (want && timeline.value.some((t) => t.year === want)) {
+    expandedYears.value = [want]
+  } else if (timeline.value.length) {
     expandedYears.value = [timeline.value[0].year]
   }
 })

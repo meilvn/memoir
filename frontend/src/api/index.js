@@ -55,6 +55,7 @@ export const mediaApi = {
   getYears: () => api.get('/media/years'),
   getOnThisDay: () => api.get('/media/on-this-day'),
   getTimeline: () => api.get('/media/timeline'),
+  getStats: () => api.get('/media/stats'),
   getMonths: (year) => api.get(`/media/months?year=${year}`),
   getDays: (year, month) => api.get(`/media/days?year=${year}&month=${month}`),
   remove: (id) => api.delete(`/media/${id}`),
