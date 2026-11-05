@@ -12,6 +12,7 @@
       </main>
     </div>
     <AppFooter v-if="showNavbar" />
+    <PetMascot />
     <button class="scroll-top" :class="{ visible: showScrollTop }" title="回到顶部" @click="scrollToTop">
       <AppIcon name="chevronUp" :size="20" />
     </button>
@@ -25,6 +26,7 @@ import { useRoute } from 'vue-router'
 import AppNavbar from '@/components/AppNavbar.vue'
 import AppFooter from '@/components/AppFooter.vue'
 import AppIcon from '@/components/AppIcon.vue'
+import PetMascot from '@/components/PetMascot.vue'
 
 const authStore = useAuthStore()
 const route = useRoute()
@@ -129,5 +131,49 @@ html {
 .main-content {
   flex: 1;
   min-height: calc(100vh - 64px - 48px);
+}
+
+/* Toast 旁的小陶表情 */
+.Vue-Toastification__toast {
+  position: relative;
+  padding-left: 44px !important;
+}
+.Vue-Toastification__toast::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 22px;
+  border-radius: 10px 10px 6px 6px;
+  background: #e8c98a;
+  box-shadow: inset 0 -2px 0 rgba(0,0,0,0.05);
+}
+.Vue-Toastification__toast::after {
+  content: '• •';
+  position: absolute;
+  left: 17px;
+  top: 50%;
+  transform: translateY(-60%);
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: #2d1a12;
+}
+.Vue-Toastification__toast--success::after {
+  content: '⌣';
+  font-size: 14px;
+  letter-spacing: 0;
+  left: 50%;
+  margin-left: -13px;
+  top: 58%;
+}
+.Vue-Toastification__toast--error::after {
+  content: '⌢';
+  font-size: 14px;
+  letter-spacing: 0;
+  left: 50%;
+  margin-left: -13px;
+  top: 48%;
 }
 </style>

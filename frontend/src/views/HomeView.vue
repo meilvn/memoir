@@ -91,13 +91,13 @@
       </div>
 
       <div v-else-if="notLoggedIn" class="empty-state">
-        <div class="empty-icon"><AppIcon name="heart" :size="24" /></div>
+        <EmptyMascot pose="heart" color="peach"><AppIcon name="heart" :size="18" /></EmptyMascot>
         <p>登录后即可查看家庭回忆</p>
         <router-link to="/login" class="btn btn-primary">去登录</router-link>
       </div>
 
       <div v-else class="empty-state">
-        <div class="empty-icon"><AppIcon name="image" :size="24" /></div>
+        <EmptyMascot pose="camera" color="mint"><AppIcon name="image" :size="18" /></EmptyMascot>
         <p>还没有回忆呢，快去上传第一张照片吧</p>
         <router-link to="/gallery" class="btn btn-primary">浏览画廊</router-link>
       </div>
@@ -121,6 +121,7 @@ import { useAuthStore } from '@/stores/auth'
 import AppIcon from '@/components/AppIcon.vue'
 import Lightbox from '@/components/Lightbox.vue'
 import SkeletonCard from '@/components/SkeletonCard.vue'
+import EmptyMascot from '@/components/EmptyMascot.vue'
 import { mediaApi } from '@/api'
 
 const router = useRouter()

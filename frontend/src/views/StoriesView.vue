@@ -57,7 +57,7 @@
     </div>
 
     <div v-else class="empty-state">
-      <div class="empty-icon"><AppIcon name="book" :size="24" /></div>
+      <EmptyMascot pose="book"><AppIcon name="book" :size="18" /></EmptyMascot>
       <p>还没有故事，选一张照片写下回忆吧！</p>
       <button class="btn btn-primary" @click="openPicker">写第一个故事</button>
     </div>
@@ -132,6 +132,7 @@ import SkeletonCard from '@/components/SkeletonCard.vue'
 import AppIcon from '@/components/AppIcon.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import StoryEditModal from '@/components/StoryEditModal.vue'
+import EmptyMascot from '@/components/EmptyMascot.vue'
 
 const mediaStore = useMediaStore()
 const router = useRouter()
@@ -789,7 +790,7 @@ $delete-width: 84px;
 // P1: 卡片右下角的奶油色小角色（登录页角色 IP 延续）
 .card-friend {
   position: absolute;
-  right: 14px;
+  right: 100px;
   bottom: 12px;
   width: 30px;
   height: 30px;
