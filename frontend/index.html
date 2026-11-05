@@ -7,7 +7,21 @@
     <title>家庭回忆录</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- 字重由 6 个收窄到 3 个（Sans 400/600 + Serif 600），并用 media 技巧避免阻塞首屏；
+         若部署环境取不到 Google Fonts，会自然回落到 global.scss 里的系统字栈（PingFang SC / 微软雅黑 / 宋体）。
+         如需彻底摆脱外链：把这两个 family 的 woff2 放到 src/assets/fonts/ 下，用 @font-face 自托管。 -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600&family=Noto+Serif+SC:wght@600&display=swap"
+      rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
+    >
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600&family=Noto+Serif+SC:wght@600&display=swap"
+        rel="stylesheet"
+      >
+    </noscript>
   </head>
   <body>
     <div id="app"></div>

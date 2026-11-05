@@ -422,8 +422,8 @@ watch(() => props.index, resetZoom)
   }
 
   &.active {
-    background: $primary;
-    border-color: $primary;
+    background: var(--primary);
+    border-color: var(--primary);
     color: #fff;
   }
 }
@@ -440,8 +440,8 @@ watch(() => props.index, resetZoom)
   }
 
   &.filled {
-    background: $primary;
-    border-color: $primary;
+    background: var(--primary);
+    border-color: var(--primary);
     color: #fff;
   }
 }
@@ -533,7 +533,7 @@ watch(() => props.index, resetZoom)
   bottom: -14px;
   height: 2px;
   width: 100%;
-  background: $primary;
+  background: var(--primary);
   transform-origin: left;
   animation: lb-progress var(--lb-dur, 4s) linear forwards;
 }
@@ -648,8 +648,8 @@ watch(() => props.index, resetZoom)
 
   &.active {
     opacity: 1;
-    border-color: $primary;
-    box-shadow: 0 0 12px rgba($primary, 0.4), inset 0 0 0 1px rgba($primary, 0.2);
+    border-color: var(--primary);
+    box-shadow: 0 0 12px rgba(var(--primary-rgb), 0.4), inset 0 0 0 1px rgba(var(--primary-rgb), 0.2);
 
     img {
       transform: scale(1.05);

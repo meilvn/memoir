@@ -1,6 +1,6 @@
 <template>
   <div class="stats-page">
-    <header class="page-head" data-reveal>
+    <header class="page-head">
       <p class="eyebrow">Insights</p>
       <h1 class="page-title serif">回忆洞察</h1>
       <p class="page-sub">用数字回望这些年的点点滴滴</p>
@@ -21,7 +21,7 @@
       </section>
 
       <!-- 年度分布 -->
-      <section class="panel" data-reveal>
+      <section class="panel">
         <div class="panel-head">
           <h2>年度分布</h2>
           <span class="panel-hint">点击年份可前往时间线</span>
@@ -79,7 +79,7 @@
       </section>
 
       <!-- 珍藏进度 -->
-      <section class="panel fav-panel" data-reveal>
+      <section class="panel fav-panel">
         <div class="panel-head">
           <h2>珍藏进度</h2>
           <span class="panel-hint">{{ stats.favorites }} / {{ stats.total }} 条已加入珍藏</span>
@@ -178,16 +178,16 @@ function goYear(year) {
 .page-head {
   margin-bottom: $space-6;
   padding: $space-5;
-  background: linear-gradient(135deg, rgba($primary, 0.04) 0%, rgba($primary, 0.01) 100%);
+  background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.04) 0%, rgba(var(--primary-rgb), 0.01) 100%);
   border-radius: $radius-lg;
-  border: 1px solid $border;
+  border: 1px solid var(--border);
 }
 
 .eyebrow {
   font-size: $text-xs;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: $text-muted;
+  color: var(--text-muted);
   margin-bottom: $space-1;
 }
 
@@ -198,7 +198,7 @@ function goYear(year) {
 
 .page-sub {
   margin-top: $space-2;
-  color: $text-secondary;
+  color: var(--text-secondary);
   font-size: $text-sm;
 }
 
@@ -231,8 +231,8 @@ function goYear(year) {
   align-items: flex-start;
   gap: 2px;
   padding: $space-5 $space-4;
-  background: $bg-card;
-  border: 1px solid $border;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: $radius-md;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   transform: translateY(0);
@@ -241,7 +241,7 @@ function goYear(year) {
   &:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-    border-color: $border-strong;
+    border-color: var(--border-strong);
   }
 }
 
@@ -252,7 +252,7 @@ function goYear(year) {
   width: 32px;
   height: 32px;
   border-radius: $radius-sm;
-  color: $primary;
+  color: var(--primary);
   margin-bottom: $space-2;
 }
 
@@ -265,14 +265,14 @@ function goYear(year) {
 
 .tile-label {
   font-size: $text-sm;
-  color: $text-secondary;
+  color: var(--text-secondary);
   letter-spacing: 0.04em;
 }
 
 /* ===== 面板 ===== */
 .panel {
-  background: $bg-card;
-  border: 1px solid $border;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: $radius-md;
   padding: $space-5;
   margin-bottom: $space-5;
@@ -292,7 +292,7 @@ function goYear(year) {
 
 .panel-hint {
   font-size: $text-xs;
-  color: $text-muted;
+  color: var(--text-muted);
 }
 
 /* ===== 年度柱状图 ===== */
@@ -319,7 +319,7 @@ function goYear(year) {
 
 .bar-count {
   font-size: $text-xs;
-  color: $text-secondary;
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -329,29 +329,29 @@ function goYear(year) {
   max-width: 42px;
   display: flex;
   align-items: flex-end;
-  background: $bg-light;
+  background: var(--bg-light);
   border-radius: $radius-sm;
   overflow: hidden;
 }
 
 .bar-fill {
   width: 100%;
-  background: linear-gradient(180deg, $primary-light, $primary);
+  background: linear-gradient(180deg, $primary-light, var(--primary));
   border-radius: $radius-sm;
   transition: height 0.6s $ease-out;
 
   .bar-col:hover & {
-    background: linear-gradient(180deg, $primary, $primary-dark);
+    background: linear-gradient(180deg, var(--primary), $primary-dark);
   }
 }
 
 .bar-year {
   font-size: $text-xs;
-  color: $text-muted;
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 
   .bar-col:hover & {
-    color: $primary;
+    color: var(--primary);
   }
 }
 
@@ -369,14 +369,14 @@ function goYear(year) {
 
 .insight-card {
   padding: $space-5;
-  background: $bg-card;
-  border: 1px solid $border;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: $radius-md;
   cursor: pointer;
   transition: $transition-fast;
 
   &:hover {
-    border-color: $border-strong;
+    border-color: var(--border-strong);
     box-shadow: $shadow-md;
     transform: translateY(-2px);
   }
@@ -390,14 +390,14 @@ function goYear(year) {
   height: 30px;
   border-radius: $radius-sm;
   background: $primary-soft;
-  color: $primary;
+  color: var(--primary);
   margin-bottom: $space-3;
 }
 
 .insight-label {
   font-size: $text-xs;
   letter-spacing: 0.1em;
-  color: $text-muted;
+  color: var(--text-muted);
   margin-bottom: 4px;
 }
 
@@ -409,14 +409,14 @@ function goYear(year) {
 
 .insight-note {
   font-size: $text-sm;
-  color: $text-secondary;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
 /* ===== 珍藏进度 ===== */
 .fav-track {
   height: 8px;
-  background: $bg-light;
+  background: var(--bg-light);
   border-radius: $radius-full;
   overflow: hidden;
   margin-bottom: $space-3;
@@ -424,21 +424,21 @@ function goYear(year) {
 
 .fav-fill {
   height: 100%;
-  background: linear-gradient(90deg, $primary-light, $primary);
+  background: linear-gradient(90deg, $primary-light, var(--primary));
   border-radius: $radius-full;
   transition: width 0.8s $ease-out;
 }
 
 .fav-note {
   font-size: $text-sm;
-  color: $text-secondary;
+  color: var(--text-secondary);
 }
 
 /* ===== 空状态 ===== */
 .empty-state {
   text-align: center;
   padding: $space-8 $space-5;
-  color: $text-secondary;
+  color: var(--text-secondary);
 
   p {
     margin: $space-4 0 $space-5;
@@ -446,6 +446,6 @@ function goYear(year) {
 }
 
 .empty-icon {
-  color: $text-muted;
+  color: var(--text-muted);
 }
 </style>

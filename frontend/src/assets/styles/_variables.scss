@@ -1,12 +1,13 @@
 // ===== 设计变量（温暖档案馆 / editorial memoir）=====
 // 通过 vite.config.js 的 additionalData 自动注入到所有样式块
 
-// ----- 色彩 -----
-$primary: #C96F4A; // 陶土色：沉静的红陶土，温暖且不刺眼
+// ----- 色彩（SCSS 保留为源头；运行时主题见 global.scss 的 :root / [data-theme]）-----
+$primary: #C96F4A; // 陶土色：沉静的红陶土，温暖且不刺眼（大面积色块 / 装饰）
 $primary-light: #E09B7D;
 $primary-dark: #A85635;
-$primary-soft: rgba($primary, 0.08);
-$primary-ghost: rgba($primary, 0.04);
+$primary-text: #A85635; // 主色承担文字 / 小图标时的加深档（暖底 4.77:1，白底 5.19:1）
+$primary-soft: rgba(var(--primary-rgb), 0.08);
+$primary-ghost: rgba(var(--primary-rgb), 0.04);
 
 $bg-warm: #F8F5F0; // 暖色背景：比纯白更有温度
 $bg-light: #F0EBE4; // 次级背景
@@ -16,10 +17,11 @@ $bg-ink: #2D2A26; // 深墨色（用于反白区域）
 // 增强对比度的文字颜色
 $text-primary: #1A1A1A; // 接近纯黑，确保可读性
 $text-secondary: #5A5A5A; // 中灰，层次分明
-$text-muted: #8A8580; // 浅灰，弱化但不失清晰
+$text-muted: #6B665F; // 弱化灰：暖底 5.23:1、白底 5.69:1，小字也达标
 
-$success: #5B9A6E;
-$error: #C05B4D;
+$success: #3C6F52; // 压白字 5.85:1（Toast / 状态色）
+$warning: #8A6120; // 压白字 5.51:1
+$error: #B14E40; // 压白字 5.21:1
 
 $accent-mint: #A8D8A8;
 $accent-pink: #FFD1DC;
@@ -66,10 +68,10 @@ $shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
 $shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
 $shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
 
-// ----- 动效（克制的缓动）-----
+// ----- 动效（两档时长：120ms 即时反馈 / 240ms 进场与位移）-----
 $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-$transition: all 0.35s $ease-out;
-$transition-fast: all 0.2s $ease-out;
+$transition: all 0.24s $ease-out;
+$transition-fast: all 0.12s $ease-out;
 
 // ----- 3D 效果强度（可调整以优化性能）-----
 $tilt-angle: 1.5deg;      // 倾斜角度
@@ -84,5 +86,5 @@ $perspective: 800px;      // 透视距离
 }
 
 // ----- 渐变（增加层次）-----
-$gradient-hero: linear-gradient(135deg, $bg-warm 0%, lighten($bg-light, 1%) 100%);
-$gradient-subtle: linear-gradient(180deg, rgba($primary, 0.02) 0%, transparent 100%);
+$gradient-hero: linear-gradient(135deg, var(--bg-warm) 0%, var(--bg-light) 100%);
+$gradient-subtle: linear-gradient(180deg, rgba(var(--primary-rgb), 0.02) 0%, transparent 100%);

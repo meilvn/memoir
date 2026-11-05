@@ -13,8 +13,8 @@ const observer =
             const delay = Number(el.dataset.revealDelay || 0)
             animate(el, {
               opacity: [0, 1],
-              translateY: [18, 0],
-              duration: 700,
+              translateY: [8, 0],
+              duration: 240,
               delay,
               easing: 'outExpo',
               onComplete: () => {

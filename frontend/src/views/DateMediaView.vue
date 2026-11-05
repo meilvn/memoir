@@ -1,7 +1,8 @@
 <template>
   <div class="date-media-page">
     <h1 class="page-title">
-      📅 {{ route.params.year }}年{{ route.params.month }}月{{ route.params.day }}日
+      <AppIcon name="calendar" :size="20" />
+      {{ route.params.year }}年{{ route.params.month }}月{{ route.params.day }}日
     </h1>
 
     <div v-if="loading" class="loading-grid">
@@ -9,16 +10,18 @@
     </div>
 
     <div v-else-if="items.length" class="masonry-gallery">
-      <div v-for="media in items" :key="media.id" class="media-card" @click="goDetail(media.id)">
+      <div v-for="media in items" :key="media.id" class="media-card" v-focusable @click="goDetail(media.id)">
         <img :src="mediaStore.getMediaUrl(media.thumbnailPath)" :alt="media.filename" loading="lazy" />
         <div class="card-overlay">
-          <span class="type-badge">{{ media.mediaType === 'VIDEO' ? '🎬' : '📷' }}</span>
+          <span class="type-badge">
+            <AppIcon :name="media.mediaType === 'VIDEO' ? 'film' : 'image'" :size="14" />
+          </span>
         </div>
       </div>
     </div>
 
     <div v-else class="empty-state">
-      <div class="empty-icon">📭</div>
+      <div class="empty-icon"><AppIcon name="image" :size="24" /></div>
       <p>这一天还没有回忆呢</p>
     </div>
   </div>
@@ -29,6 +32,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMediaStore } from '@/stores/media'
 import { mediaApi } from '@/api'
+import AppIcon from '@/components/AppIcon.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -65,6 +69,9 @@ function goDetail(id) {
   font-family: $font-serif;
   font-size: 1.8rem;
   margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .masonry-gallery {
@@ -111,6 +118,7 @@ function goDetail(id) {
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #fff;
   font-size: 0.9rem;
 }
 

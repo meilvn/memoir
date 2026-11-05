@@ -61,7 +61,7 @@ async function toggle() {
 
   /* 实心爱心：同一路径填充色 */
   &.filled {
-    color: $primary;
+    color: var(--primary);
 
     :deep(.app-icon path) {
       fill: currentColor;
@@ -83,7 +83,7 @@ async function toggle() {
 
     &.filled {
       color: #fff;
-      background: $primary;
+      background: var(--primary);
     }
   }
 
@@ -91,14 +91,14 @@ async function toggle() {
   &.bar {
     width: 38px;
     height: 38px;
-    border: 1px solid $border;
+    border: 1px solid var(--border);
     border-radius: $radius-full;
-    background: $bg-card;
-    color: $text-secondary;
+    background: var(--bg-card);
+    color: var(--text-secondary);
 
     &:hover {
-      border-color: $primary;
-      color: $primary;
+      border-color: var(--primary);
+      color: var(--primary);
       background: $primary-soft;
     }
   }

@@ -90,6 +90,19 @@
               <AppIcon name="tag" :size="11" />{{ tag }}
             </span>
           </div>
+          <div v-if="note.extraMedias?.length" class="story-extras">
+            <p class="story-extras-title">同故事照片（共 {{ note.extraMedias.length + 1 }} 张）</p>
+            <div class="story-extras-grid">
+              <button
+                v-for="m in note.extraMedias"
+                :key="m.id"
+                class="story-extra"
+                @click="goMedia(m.id)"
+              >
+                <img :src="mediaStore.getMediaUrl(m.thumbnailPath)" :alt="m.filename" />
+              </button>
+            </div>
+          </div>
         </div>
         <div v-else class="no-note">
           <p>还没有备注，点击上方按钮添加吧~</p>
@@ -102,8 +115,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useMediaStore } from '@/stores/media'
 import { notesApi, mediaApi } from '@/api'
 import { useToast } from 'vue-toastification'
@@ -112,6 +125,7 @@ import FavoriteButton from '@/components/FavoriteButton.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 const route = useRoute()
+const router = useRouter()
 const mediaStore = useMediaStore()
 const toast = useToast()
 
@@ -140,10 +154,17 @@ const exifFields = computed(() => {
   return fields
 })
 
-onMounted(async () => {
+onMounted(loadMedia)
+
+// 同故事照片在详情页内部切换：不整页跳转、不滚顶，原地换图
+watch(() => route.params.id, (id, oldId) => {
+  if (id && id !== oldId) loadMedia()
+})
+
+async function loadMedia() {
   media.value = await mediaApi.getOne(route.params.id)
   await loadNote()
-})
+}
 
 async function loadNote() {
   try {
@@ -174,8 +195,10 @@ async function saveNote() {
       content: noteContent.value,
       mood: selectedMood.value || null,
       tags: noteTags.value,
+      // 保留已绑定的附加照片
+      extraMediaIds: note.value?.extraMediaIds || [],
     })
-    toast.success('备注已保存 💕')
+    toast.success('备注已保存')
     editingNote.value = false
     await loadNote()
   } catch (err) {
@@ -183,6 +206,10 @@ async function saveNote() {
   } finally {
     saving.value = false
   }
+}
+
+function goMedia(id) {
+  router.push(`/media/${id}`)
 }
 
 function formatDate(dateStr) {
@@ -252,8 +279,8 @@ async function executeDelete() {
 }
 
 .media-info {
-  background: $bg-card;
-  border: 1px solid $border;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: $radius-lg;
   padding: $space-5;
   box-shadow: $shadow-sm;
@@ -266,7 +293,7 @@ async function executeDelete() {
   gap: $space-4;
   margin-bottom: $space-5;
   padding-bottom: $space-4;
-  border-bottom: 1px solid $border;
+  border-bottom: 1px solid var(--border);
 
   h1 {
     font-size: $text-2xl;
@@ -274,7 +301,7 @@ async function executeDelete() {
   }
 
   .media-date {
-    color: $text-muted;
+    color: var(--text-muted);
     font-size: $text-xs;
     letter-spacing: 0.04em;
     word-break: break-all;
@@ -288,29 +315,29 @@ async function executeDelete() {
   flex-shrink: 0;
 
   .download-btn {
-    color: $text-muted;
+    color: var(--text-muted);
 
     &:hover {
-      color: $primary;
+      color: var(--primary);
       background: $primary-soft;
     }
   }
 
   .copy-btn {
-    color: $text-muted;
+    color: var(--text-muted);
 
     &:hover {
-      color: $primary;
+      color: var(--primary);
       background: $primary-soft;
     }
   }
 
   .danger {
-    color: $text-muted;
+    color: var(--text-muted);
 
     &:hover {
-      color: $error;
-      background: rgba($error, 0.08);
+      color: var(--error);
+      background: rgba(var(--error-rgb), 0.08);
     }
   }
 }
@@ -322,19 +349,19 @@ async function executeDelete() {
   font-size: $text-xs;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: $primary;
+  color: var(--primary);
   margin-bottom: $space-2;
 }
 
 /* ===== EXIF 元数据 ===== */
 .exif-section {
   padding: $space-4 $space-5;
-  border-top: 1px solid $border;
+  border-top: 1px solid var(--border);
 
   .section-title {
     font-size: $text-sm;
     font-weight: 600;
-    color: $text-secondary;
+    color: var(--text-secondary);
     margin-bottom: $space-3;
     letter-spacing: 0.04em;
   }
@@ -354,13 +381,13 @@ async function executeDelete() {
 
 .exif-label {
   font-size: $text-xs;
-  color: $text-muted;
+  color: var(--text-muted);
   letter-spacing: 0.04em;
 }
 
 .exif-value {
   font-size: $text-sm;
-  color: $text-primary;
+  color: var(--text-primary);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
@@ -381,19 +408,19 @@ async function executeDelete() {
   textarea {
     width: 100%;
     padding: $space-3;
-    border: 1px solid $border;
+    border: 1px solid var(--border);
     border-radius: $radius-sm;
     resize: vertical;
     margin-bottom: $space-3;
     font-family: inherit;
     font-size: $text-base;
     line-height: 1.7;
-    color: $text-primary;
-    background: $bg-warm;
+    color: var(--text-primary);
+    background: var(--bg-warm);
 
     &:focus {
       outline: none;
-      border-color: $primary;
+      border-color: var(--primary);
     }
   }
 }
@@ -405,10 +432,10 @@ async function executeDelete() {
   gap: 6px;
   align-items: center;
   padding: $space-2 $space-3;
-  border: 1px dashed $border-strong;
+  border: 1px dashed var(--border-strong);
   border-radius: $radius-sm;
   margin-bottom: $space-3;
-  background: $bg-warm;
+  background: var(--bg-warm);
 }
 
 .tag-pill {
@@ -417,7 +444,7 @@ async function executeDelete() {
   gap: 4px;
   padding: 3px 6px 3px 10px;
   background: $primary-soft;
-  color: $primary;
+  color: var(--primary);
   border-radius: $radius-full;
   font-size: $text-xs;
 }
@@ -430,14 +457,14 @@ async function executeDelete() {
   height: 15px;
   border: none;
   border-radius: $radius-full;
-  background: rgba($primary, 0.16);
-  color: $primary;
+  background: rgba(var(--primary-rgb), 0.16);
+  color: var(--primary);
   font-size: 11px;
   line-height: 1;
   cursor: pointer;
 
   &:hover {
-    background: $primary;
+    background: var(--primary);
     color: #fff;
   }
 }
@@ -450,10 +477,10 @@ async function executeDelete() {
   outline: none;
   font-size: $text-sm;
   font-family: inherit;
-  color: $text-primary;
+  color: var(--text-primary);
 
   &::placeholder {
-    color: $text-muted;
+    color: var(--text-muted);
   }
 }
 
@@ -484,7 +511,7 @@ async function executeDelete() {
   .note-content {
     font-size: 1rem;
     line-height: 1.8;
-    color: $text-primary;
+    color: var(--text-primary);
     white-space: pre-wrap;
     margin-bottom: 12px;
   }
@@ -504,7 +531,7 @@ async function executeDelete() {
     align-items: center;
     gap: 4px;
     background: $primary-soft;
-    color: $primary;
+    color: var(--primary);
     padding: 4px 12px;
     border-radius: $radius-full;
     font-size: $text-xs;
@@ -512,8 +539,49 @@ async function executeDelete() {
 }
 
 .no-note {
-  color: $text-muted;
+  color: var(--text-muted);
   text-align: center;
   padding: 24px;
+}
+
+.story-extras {
+  margin-top: $space-4;
+  padding-top: $space-4;
+  border-top: 1px solid var(--border);
+}
+
+.story-extras-title {
+  margin: 0 0 $space-3;
+  font-size: $text-sm;
+  color: var(--text-muted);
+}
+
+.story-extras-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: $space-2;
+}
+
+.story-extra {
+  padding: 0;
+  border: 2px solid var(--border);
+  border-radius: $radius-md;
+  overflow: hidden;
+  cursor: pointer;
+  aspect-ratio: 1;
+  background: var(--bg-light);
+  transition: border-color 0.12s cubic-bezier(0.22, 1, 0.36, 1), transform 0.12s cubic-bezier(0.22, 1, 0.36, 1);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &:hover {
+    border-color: var(--primary);
+    transform: scale(1.03);
+  }
 }
 </style>

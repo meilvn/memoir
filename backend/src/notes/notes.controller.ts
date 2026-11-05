@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param } from '@nestjs/common'
+import { Controller, Post, Get, Delete, Body, Param } from '@nestjs/common'
 import { NotesService } from '@notes/notes.service'
 import { CreateNoteDto } from '@notes/dto/create-note.dto'
 import { CurrentUser } from '@common/decorators/current-user.decorator'
@@ -26,5 +26,10 @@ export class NotesController {
   @Get(':mediaId')
   findByMedia(@Param('mediaId') mediaId: string) {
     return this.notesService.findByMedia(mediaId)
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.notesService.remove(id, user.sub)
   }
 }

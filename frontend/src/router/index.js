@@ -91,7 +91,10 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior() {
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) return savedPosition
+    // 同一组件内部切换（如详情页点“同故事照片”）保留当前滚动位置
+    if (to.name === from.name) return {}
     return { top: 0, behavior: 'smooth' }
   },
 })

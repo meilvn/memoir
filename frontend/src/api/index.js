@@ -66,6 +66,7 @@ export const notesApi = {
   findByMedia: (mediaId) => api.get(`/notes/${mediaId}`),
   findMy: () => api.get('/notes/my'),
   getTags: () => api.get('/notes/tags'),
+  remove: (id) => api.delete(`/notes/${id}`),
 }
 
 export const usersApi = {

@@ -1,6 +1,6 @@
 <template>
   <div class="timeline-page">
-    <header class="page-head" data-reveal>
+    <header class="page-head">
       <p class="eyebrow">Timeline</p>
       <h1 class="page-title serif">时光之旅</h1>
     </header>
@@ -15,7 +15,7 @@
 
     <div v-else-if="timeline.length" class="timeline-container">
       <div v-for="group in timelineGroups" :key="group.year" class="timeline-year">
-        <div class="year-header" @click="toggleYear(group.year)">
+        <div class="year-header" v-focusable @click="toggleYear(group.year)">
           <span class="year-dot"></span>
           <h2 class="year-title serif">{{ group.year }} 年</h2>
           <span class="year-count">{{ group.count }} 张</span>
@@ -221,16 +221,16 @@ function formatDuration(seconds) {
 .page-head {
   margin-bottom: $space-6;
   padding: $space-5;
-  background: linear-gradient(135deg, rgba($primary, 0.04) 0%, rgba($primary, 0.01) 100%);
+  background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.04) 0%, rgba(var(--primary-rgb), 0.01) 100%);
   border-radius: $radius-lg;
-  border: 1px solid $border;
+  border: 1px solid var(--border);
 }
 
 .eyebrow {
   font-size: $text-xs;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: $text-muted;
+  color: var(--text-muted);
   margin-bottom: $space-1;
 }
 
@@ -250,7 +250,7 @@ function formatDuration(seconds) {
     top: 6px;
     bottom: 6px;
     width: 1px;
-    background: linear-gradient(180deg, $primary, $border);
+    background: linear-gradient(180deg, var(--primary), var(--border));
   }
 }
 
@@ -269,19 +269,19 @@ function formatDuration(seconds) {
   position: sticky;
   top: 64px;
   z-index: 10;
-  background: $bg-warm;
+  background: var(--bg-warm);
   padding: $space-2 0;
   border-radius: $radius-sm;
 
   &:hover .year-title {
-    color: $primary;
+    color: var(--primary);
   }
 }
 
 .year-arrow {
   margin-left: auto;
   display: inline-flex;
-  color: $text-muted;
+  color: var(--text-muted);
   transition: transform 0.25s $ease-out;
 
   &.open {
@@ -295,7 +295,7 @@ function formatDuration(seconds) {
   width: 11px;
   height: 11px;
   border-radius: 50%;
-  background: $primary;
+  background: var(--primary);
   box-shadow: 0 0 0 4px $primary-soft;
   z-index: 1;
   animation: pulse-dot 3s ease-in-out infinite;
@@ -306,7 +306,7 @@ function formatDuration(seconds) {
     box-shadow: 0 0 0 4px $primary-soft;
   }
   50% {
-    box-shadow: 0 0 0 8px rgba($primary, 0.05), 0 0 0 12px rgba($primary, 0.02);
+    box-shadow: 0 0 0 8px rgba(var(--primary-rgb), 0.05), 0 0 0 12px rgba(var(--primary-rgb), 0.02);
   }
 }
 
@@ -318,8 +318,8 @@ function formatDuration(seconds) {
 
 .year-count {
   font-size: $text-xs;
-  color: $text-secondary;
-  background: $bg-light;
+  color: var(--text-secondary);
+  background: var(--bg-light);
   padding: 2px 12px;
   border-radius: $radius-full;
   letter-spacing: 0.04em;
@@ -349,21 +349,21 @@ function formatDuration(seconds) {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: $bg-card;
-  border: 2px solid $primary;
+  background: var(--bg-card);
+  border: 2px solid var(--primary);
   z-index: 1;
 }
 
 .month-title {
   font-size: $text-base;
   font-weight: 600;
-  color: $text-secondary;
+  color: var(--text-secondary);
 }
 
 .month-count {
   font-size: $text-xs;
-  color: $text-muted;
-  background: $bg-light;
+  color: var(--text-muted);
+  background: var(--bg-light);
   padding: 1px 10px;
   border-radius: $radius-full;
 }
@@ -378,9 +378,9 @@ function formatDuration(seconds) {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid $border;
-  background: $bg-card;
-  color: $text-secondary;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
   font-size: $text-sm;
   font-family: inherit;
   padding: 6px $space-4;
@@ -389,8 +389,8 @@ function formatDuration(seconds) {
   transition: $transition-fast;
 
   &:hover {
-    border-color: $primary;
-    color: $primary;
+    border-color: var(--primary);
+    color: var(--primary);
     background: $primary-soft;
   }
 }
@@ -408,8 +408,8 @@ function formatDuration(seconds) {
   cursor: pointer;
   position: relative;
   aspect-ratio: 1;
-  border: 1px solid $border;
-  background: $bg-light;
+  border: 1px solid var(--border);
+  background: var(--bg-light);
   animation: fade-up 0.5s $ease-out both;
   transition: box-shadow 0.3s ease, border-color 0.3s ease;
 
@@ -421,7 +421,7 @@ function formatDuration(seconds) {
   }
 
   &:hover {
-    border-color: $border-strong;
+    border-color: var(--border-strong);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 
     img {
@@ -458,7 +458,7 @@ function formatDuration(seconds) {
 .empty-state {
   text-align: center;
   padding: $space-8 $space-5;
-  color: $text-secondary;
+  color: var(--text-secondary);
 
   p {
     margin-top: $space-4;
@@ -466,7 +466,7 @@ function formatDuration(seconds) {
 }
 
 .empty-icon {
-  color: $text-muted;
+  color: var(--text-muted);
 }
 
 /* ===== 加载骨架 ===== */
@@ -492,7 +492,7 @@ function formatDuration(seconds) {
 
 .skeleton-year,
 .skeleton-month {
-  background: linear-gradient(90deg, $bg-light 25%, lighten($bg-light, 3%) 50%, $bg-light 75%);
+  background: linear-gradient(90deg, var(--bg-light) 25%, color-mix(in srgb, var(--bg-light) 90%, white) 50%, var(--bg-light) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: $radius-sm;

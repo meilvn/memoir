@@ -8,7 +8,7 @@
 
     <div class="register-card card">
       <div class="register-header">
-        <span class="register-icon">🎉</span>
+        <span class="register-icon"><AppIcon name="sparkle" :size="30" /></span>
         <h1>欢迎加入</h1>
         <p>创建你的家庭回忆录账号</p>
       </div>
@@ -97,7 +97,7 @@ async function handleRegister() {
   align-items: center;
   justify-content: center;
   position: relative;
-  background: linear-gradient(135deg, $bg-warm, $bg-light);
+  background: linear-gradient(135deg, var(--bg-warm), var(--bg-light));
   overflow: hidden;
 }
 
@@ -116,7 +116,7 @@ async function handleRegister() {
 .c1 {
   width: 350px;
   height: 350px;
-  background: $primary;
+  background: var(--primary);
   top: -80px;
   left: -80px;
   animation: float 8s ease-in-out infinite;
@@ -154,9 +154,15 @@ async function handleRegister() {
   margin-bottom: 32px;
 
   .register-icon {
-    font-size: 3rem;
-    display: block;
-    margin-bottom: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: $primary-soft;
+    color: var(--primary-text);
+    margin-bottom: 10px;
   }
 
   h1 {
@@ -166,7 +172,7 @@ async function handleRegister() {
   }
 
   p {
-    color: $text-muted;
+    color: var(--text-muted);
     font-size: 0.95rem;
   }
 }
@@ -183,14 +189,14 @@ async function handleRegister() {
     border-radius: 50%;
     transition: $transition;
 
-    &.weak { background: $error; }
+    &.weak { background: var(--error); }
     &.medium { background: $primary-light; }
-    &.strong { background: $success; }
+    &.strong { background: var(--success); }
   }
 
   .strength-text {
     font-size: 0.8rem;
-    color: $text-muted;
+    color: var(--text-muted);
   }
 }
 
@@ -216,12 +222,12 @@ async function handleRegister() {
   padding: 4px;
   border: none;
   background: none;
-  color: $text-muted;
+  color: var(--text-muted);
   cursor: pointer;
   transition: $transition-fast;
 
   &:hover {
-    color: $text-primary;
+    color: var(--text-primary);
   }
 }
 
@@ -229,10 +235,10 @@ async function handleRegister() {
   text-align: center;
   margin-top: 20px;
   font-size: 0.9rem;
-  color: $text-muted;
+  color: var(--text-muted);
 
   a {
-    color: $primary;
+    color: var(--primary);
     font-weight: 500;
   }
 }

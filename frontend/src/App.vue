@@ -38,7 +38,7 @@ let loadingTimer = null
 function onEnter() {
   loading.value = true
   clearTimeout(loadingTimer)
-  loadingTimer = setTimeout(() => { loading.value = false }, 600)
+  loadingTimer = setTimeout(() => { loading.value = false }, 320)
 }
 
 function onLeave() {
@@ -71,18 +71,18 @@ onBeforeUnmount(() => {
 })
 </script>
 
-<style>
+<style lang="scss">
 .page-enter-active,
 .page-leave-active {
-  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.24s cubic-bezier(0.4, 0, 0.2, 1), transform 0.24s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .page-enter-from {
   opacity: 0;
-  transform: translateY(12px) scale(0.995);
+  transform: translateY(8px);
 }
 .page-leave-to {
   opacity: 0;
-  transform: translateY(-8px) scale(0.995);
+  transform: translateY(-6px);
 }
 
 .loading-bar {
@@ -91,7 +91,7 @@ onBeforeUnmount(() => {
   left: 0;
   height: 2px;
   width: 100%;
-  background: linear-gradient(90deg, $primary, $primary-light);
+  background: linear-gradient(90deg, var(--primary), $primary-light);
   z-index: 9999;
   transform: scaleX(0);
   transform-origin: left;
@@ -101,7 +101,7 @@ onBeforeUnmount(() => {
 
   &.visible {
     opacity: 1;
-    animation: load-bar 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: load-bar 0.32s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 }
 

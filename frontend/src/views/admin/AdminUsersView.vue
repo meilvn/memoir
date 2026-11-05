@@ -133,7 +133,7 @@ function formatDate(dateStr) {
 }
 
 .add-user-form {
-  background: $bg-light;
+  background: var(--bg-light);
   border-radius: $radius-sm;
   padding: 16px;
   margin-bottom: 16px;
@@ -148,9 +148,9 @@ function formatDate(dateStr) {
     flex: 1;
     min-width: 150px;
     padding: 8px 12px;
-    border: 1.5px solid $border;
+    border: 1.5px solid var(--border);
     border-radius: $radius-sm;
-    background: $bg-card;
+    background: var(--bg-card);
   }
 }
 
@@ -161,23 +161,23 @@ function formatDate(dateStr) {
   th, td {
     padding: 12px;
     text-align: left;
-    border-bottom: 1px solid $border;
+    border-bottom: 1px solid var(--border);
   }
 
   th {
-    color: $text-secondary;
+    color: var(--text-secondary);
     font-weight: 600;
     font-size: 0.85rem;
   }
 
   td select {
     padding: 4px 8px;
-    border: 1px solid $border;
+    border: 1px solid var(--border);
     border-radius: $radius-sm;
   }
 }
 
 .danger {
-  color: $error !important;
+  color: var(--error) !important;
 }
 </style>

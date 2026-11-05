@@ -1,18 +1,24 @@
 <template>
   <div class="home">
     <!-- 编辑式 Hero -->
-    <header class="hero" data-reveal>
+    <header class="hero" @mousemove="onHeroMouse">
+      <div class="hero-orb orb-a animate__animated animate__fadeInRight" aria-hidden="true" />
+      <div class="hero-orb orb-b animate__animated animate__fadeInLeft" aria-hidden="true" />
+      <div class="hero-glow" aria-hidden="true" />
       <div class="hero-inner" :style="{ transform: `translateY(${heroParallax * -20}px)` }">
-        <p class="eyebrow">Family Memoir · 家庭回忆</p>
-        <h1 class="hero-title serif">每一张照片，<br />都是回家的路</h1>
-        <p class="hero-sub">记录温暖瞬间，留住时光故事</p>
-        <div class="hero-rule" />
+        <p class="eyebrow animate__animated animate__fadeInDown">Family Memoir · 家庭回忆</p>
+        <h1 class="hero-title serif blur-up">每一张照片，<br />都是回家的路</h1>
+        <p class="hero-sub animate__animated animate__fadeInUp animate__delay-1s">记录温暖瞬间，留住时光故事</p>
+        <div class="hero-rule animate__animated animate__zoomIn animate__delay-2s" />
       </div>
     </header>
 
     <!-- 快捷入口 -->
-    <nav class="quick-nav" data-reveal>
-      <div v-for="card in quickCards" :key="card.title" class="quick-item" @click="handleQuickCard(card)">
+    <nav class="quick-nav">
+      <div v-for="(card, i) in quickCards" :key="card.title"
+        class="quick-item animate__animated animate__fadeInUp"
+        :style="{ animationDelay: `${0.5 + i * 0.12}s` }"
+        v-focusable @click="handleQuickCard(card)">
         <span class="quick-icon"><AppIcon :name="card.icon" :size="19" /></span>
         <span class="quick-text">
           <strong>{{ card.title }}</strong>
@@ -23,7 +29,7 @@
     </nav>
 
     <!-- 历史上的今天 -->
-    <section v-if="otdLoading" class="on-this-day" data-reveal>
+    <section v-if="otdLoading" class="on-this-day">
       <div class="section-head">
         <h2>历史上的今天</h2>
         <span class="eyebrow">On This Day</span>
@@ -33,7 +39,7 @@
       </div>
     </section>
 
-    <section v-else-if="onThisDay.length" class="on-this-day" data-reveal>
+    <section v-else-if="onThisDay.length" class="on-this-day">
       <div class="section-head">
         <h2>历史上的今天</h2>
         <span class="eyebrow">On This Day</span>
@@ -135,6 +141,16 @@ const lightboxItems = computed(() => (lightboxSource.value === 'otd' ? onThisDay
 
 const heroParallax = ref(0)
 
+// Hero 鼠标视差：光斑跟随指针
+function onHeroMouse(e) {
+  const el = e.currentTarget
+  const r = el.getBoundingClientRect()
+  const x = ((e.clientX - r.left) / r.width - 0.5) * 2
+  const y = ((e.clientY - r.top) / r.height - 0.5) * 2
+  el.style.setProperty('--hmx', x.toFixed(3))
+  el.style.setProperty('--hmy', y.toFixed(3))
+}
+
 const quickCards = [
   { icon: 'image', title: '回忆画廊', desc: '浏览所有照片与视频', to: '/gallery' },
   { icon: 'clock', title: '时光之旅', desc: '按年月日回溯往事', to: '/timeline' },
@@ -229,9 +245,86 @@ function formatDate(dateStr) {
   background: $gradient-hero;
   border-radius: $radius-lg;
   margin-bottom: $space-6;
+  overflow: hidden;
+  --hmx: 0;
+  --hmy: 0;
 
   header {
     transition: transform 0.1s linear;
+  }
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 1;
+}
+
+/* 漂浮暖光斑 */
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(48px);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.orb-a {
+  width: 220px;
+  height: 220px;
+  top: -70px;
+  right: 8%;
+  background: var(--primary-soft, #e8c9b8);
+  animation: orb-drift 14s ease-in-out infinite;
+  translate: calc(var(--hmx) * 24px) calc(var(--hmy) * 24px);
+}
+
+.orb-b {
+  width: 160px;
+  height: 160px;
+  bottom: -60px;
+  left: 12%;
+  background: #f0d9c8;
+  animation: orb-drift 18s ease-in-out infinite reverse;
+  translate: calc(var(--hmx) * -36px) calc(var(--hmy) * -36px);
+}
+
+.orb-c {
+  width: 90px;
+  height: 90px;
+  top: 40%;
+  right: 30%;
+  background: #e3b89f;
+  opacity: 0.35;
+  animation: orb-drift 11s ease-in-out infinite;
+}
+
+/* 鼠标跟随的暖色涟漪光晕 */
+.hero-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 220, 180, 0.55), transparent 65%);
+  filter: blur(20px);
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+  translate: calc(var(--hmx) * 300px - 180px) calc(var(--hmy) * 200px - 180px);
+  z-index: 0;
+}
+
+@keyframes orb-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(14px, -18px) scale(1.08); }
+  66% { transform: translate(-10px, 12px) scale(0.96); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-orb,
+  .hero-title {
+    animation: none !important;
   }
 }
 
@@ -241,7 +334,7 @@ function formatDate(dateStr) {
   line-height: 1.28;
   letter-spacing: 0.01em;
   margin: $space-3 0 $space-4;
-  background: linear-gradient(135deg, $text-primary 0%, $primary 100%);
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -254,15 +347,33 @@ function formatDate(dateStr) {
   50% { background-position: 100% 50%; }
 }
 
+/* 标题模糊聚焦入场 */
+.blur-up {
+  animation: blur-up 1.2s $ease-out 0.15s both;
+}
+
+@keyframes blur-up {
+  from {
+    opacity: 0;
+    filter: blur(12px);
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
 .hero-sub {
   font-size: $text-lg;
-  color: $text-secondary;
+  color: var(--text-secondary);
 }
 
 .hero-rule {
   width: 56px;
   height: 2px;
-  background: $primary;
+  background: var(--primary);
   margin-top: $space-5;
   animation: hero-rule-in 1s $ease-out 0.3s both;
 }
@@ -284,7 +395,7 @@ function formatDate(dateStr) {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: $space-3;
   padding: $space-5 0 $space-7;
-  border-top: 1px solid $border;
+  border-top: 1px solid var(--border);
 }
 
 .quick-item {
@@ -292,9 +403,9 @@ function formatDate(dateStr) {
   align-items: center;
   gap: $space-3;
   padding: $space-4;
-  border: 1px solid $border;
+  border: 1px solid var(--border);
   border-radius: $radius-md;
-  background: $bg-card;
+  background: var(--bg-card);
   text-decoration: none;
   color: inherit;
   cursor: pointer;
@@ -303,12 +414,12 @@ function formatDate(dateStr) {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease;
 
   &:hover {
-    border-color: $primary;
+    border-color: var(--primary);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06);
     transform: translateY(-4px);
 
     .quick-icon {
-      background: $primary;
+      background: var(--primary);
       color: #fff;
       transform: scale(1.05);
     }
@@ -325,7 +436,7 @@ function formatDate(dateStr) {
   height: 40px;
   border-radius: 50%;
   background: $primary-soft;
-  color: $primary;
+  color: var(--primary);
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -346,15 +457,20 @@ function formatDate(dateStr) {
   em {
     font-style: normal;
     font-size: $text-xs;
-    color: $text-muted;
+    color: var(--text-muted);
     margin-top: 2px;
   }
 }
 
 .quick-arrow {
-  color: $text-muted;
+  color: var(--text-muted);
   opacity: 0;
   transition: $transition;
+}
+
+/* 入场动画结束后解除 transform 锁定，保留 hover 抬升 */
+.quick-item.animate__animated {
+  animation-fill-mode: backwards;
 }
 
 /* ===== 历史上的今天 ===== */
@@ -374,8 +490,8 @@ function formatDate(dateStr) {
   overflow: hidden;
   cursor: pointer;
   aspect-ratio: 4 / 3;
-  background: $bg-light;
-  border: 1px solid $border;
+  background: var(--bg-light);
+  border: 1px solid var(--border);
 
   img {
     width: 100%;
@@ -427,8 +543,8 @@ function formatDate(dateStr) {
   overflow: hidden;
   cursor: pointer;
   aspect-ratio: 4 / 3;
-  background: $bg-light;
-  border: 1px solid $border;
+  background: var(--bg-light);
+  border: 1px solid var(--border);
 
   img {
     width: 100%;

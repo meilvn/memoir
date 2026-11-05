@@ -3,7 +3,7 @@
     <h1 class="page-title serif">设置</h1>
 
     <!-- 用户资料 -->
-    <section class="settings-section" data-reveal>
+    <section class="settings-section">
       <h2 class="section-title"><AppIcon name="user" :size="16" />个人资料</h2>
       <div class="settings-card card">
         <div class="profile-row">
@@ -20,7 +20,7 @@
     </section>
 
     <!-- 偏好设置 -->
-    <section class="settings-section" data-reveal>
+    <section class="settings-section">
       <h2 class="section-title"><AppIcon name="sliders" :size="16" />偏好设置</h2>
       <div class="settings-card card">
         <div class="setting-item">
@@ -56,8 +56,34 @@
       </div>
     </section>
 
+    <!-- 外观 -->
+    <section class="settings-section">
+      <h2 class="section-title"><AppIcon name="sliders" :size="16" />外观</h2>
+      <div class="settings-card card">
+        <div class="setting-item">
+          <div class="setting-info">
+            <p class="setting-label">主题模式</p>
+            <p class="setting-desc">跟随系统会自动匹配浅色 / 深色</p>
+          </div>
+          <div class="theme-switch" role="radiogroup" aria-label="主题模式">
+            <button
+              v-for="opt in themeOptions"
+              :key="opt.value"
+              class="theme-option"
+              :class="{ active: settingsStore.theme === opt.value }"
+              role="radio"
+              :aria-checked="settingsStore.theme === opt.value"
+              @click="settingsStore.setTheme(opt.value)"
+            >
+              {{ opt.label }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- 账号安全 -->
-    <section class="settings-section" data-reveal>
+    <section class="settings-section">
       <h2 class="section-title"><AppIcon name="check" :size="16" />账号安全</h2>
       <div class="settings-card card">
         <div class="setting-item">
@@ -83,12 +109,20 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useSettingsStore } from '@/stores/settings'
 import { useToast } from 'vue-toastification'
 import AppIcon from '@/components/AppIcon.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const settingsStore = useSettingsStore()
 const toast = useToast()
+
+const themeOptions = [
+  { value: 'light', label: '浅色' },
+  { value: 'dark', label: '深色' },
+  { value: 'system', label: '跟随系统' },
+]
 
 const avatarText = ref(
   authStore.user?.nickname?.[0] || authStore.user?.username?.[0] || 'U',
@@ -153,7 +187,7 @@ function handleLogout() {
   gap: 8px;
   font-size: $text-sm;
   font-weight: 600;
-  color: $text-secondary;
+  color: var(--text-secondary);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   margin-bottom: $space-3;
@@ -171,7 +205,7 @@ function handleLogout() {
   padding: $space-4 $space-5;
 
   &:not(:last-child) {
-    border-bottom: 1px solid $border;
+    border-bottom: 1px solid var(--border);
   }
 }
 
@@ -188,7 +222,7 @@ function handleLogout() {
 
 .setting-desc {
   font-size: $text-sm;
-  color: $text-muted;
+  color: var(--text-muted);
 }
 
 /* 开关按钮 */
@@ -209,7 +243,7 @@ function handleLogout() {
   .toggle-slider {
     position: absolute;
     inset: 0;
-    background: $border-strong;
+    background: var(--border-strong);
     border-radius: $radius-full;
     transition: $transition-fast;
 
@@ -227,7 +261,7 @@ function handleLogout() {
   }
 
   input:checked + .toggle-slider {
-    background: $primary;
+    background: var(--primary);
 
     &::before {
       transform: translateX(20px);
@@ -245,24 +279,24 @@ function handleLogout() {
   font-weight: 500;
 
   &.online {
-    background: rgba($success, 0.12);
-    color: $success;
+    background: rgba(var(--success), 0.12);
+    color: var(--success);
 
     &::before {
       content: '';
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: $success;
+      background: var(--success);
     }
   }
 }
 
 .btn.danger {
-  color: $error;
+  color: var(--error);
 
   &:hover {
-    background: rgba($error, 0.08);
+    background: rgba(var(--error-rgb), 0.08);
   }
 }
 
@@ -278,7 +312,7 @@ function handleLogout() {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: $primary;
+  background: var(--primary);
   color: #fff;
   display: grid;
   place-items: center;
@@ -296,7 +330,7 @@ function handleLogout() {
 
 .profile-email {
   font-size: $text-sm;
-  color: $text-muted;
+  color: var(--text-muted);
   margin-bottom: 4px;
 }
 
@@ -306,7 +340,38 @@ function handleLogout() {
   padding: 2px 10px;
   border-radius: $radius-full;
   background: $primary-soft;
-  color: $primary;
+  color: var(--primary);
   font-weight: 500;
+}
+
+.theme-switch {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+}
+
+.theme-option {
+  padding: 6px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: $text-sm;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.12s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.theme-option:hover {
+  color: var(--text-primary);
+}
+
+.theme-option.active {
+  background: var(--bg-card);
+  color: var(--primary-text);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 </style>

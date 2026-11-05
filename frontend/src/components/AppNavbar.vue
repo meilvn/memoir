@@ -5,39 +5,58 @@
       <span>家庭回忆录</span>
     </router-link>
 
-    <!-- 桌面端导航 -->
+    <!-- 桌面端导航（与移动端同一份 navLinks，7 项一致） -->
     <div class="nav-links">
-      <router-link to="/" class="nav-link">
-        <AppIcon name="home" :size="16" />首页
-      </router-link>
-      <router-link to="/gallery" class="nav-link">
-        <AppIcon name="image" :size="16" />画廊
-      </router-link>
-      <router-link to="/stories" class="nav-link">
-        <AppIcon name="book" :size="16" />故事
-      </router-link>
-      <router-link to="/timeline" class="nav-link">
-        <AppIcon name="clock" :size="16" />时间线
-      </router-link>
-      <router-link to="/stats" class="nav-link">
-        <AppIcon name="chart" :size="16" />洞察
+      <router-link
+        v-for="link in navLinks"
+        :key="link.to"
+        :to="link.to"
+        class="nav-link"
+        :title="link.label"
+      >
+        <AppIcon :name="link.icon" :size="16" /><span class="nav-label">{{ link.label }}</span>
       </router-link>
     </div>
 
     <!-- 移动端汉堡按钮 -->
-    <button class="hamburger" :class="{ open: mobileOpen }" @click="mobileOpen = !mobileOpen">
+    <button
+      class="hamburger"
+      :class="{ open: mobileOpen }"
+      :aria-expanded="mobileOpen ? 'true' : 'false'"
+      aria-label="打开导航"
+      @click="mobileOpen = !mobileOpen"
+    >
       <span></span><span></span><span></span>
     </button>
 
-    <!-- 移动端下拉菜单 -->
-    <transition name="mb">
-      <div v-if="mobileOpen" class="mobile-menu" @click.self="mobileOpen = false">
-        <router-link v-for="link in navLinks" :key="link.to" :to="link.to" class="mobile-link" @click="mobileOpen = false">
-          <AppIcon :name="link.icon" :size="18" />
-          {{ link.label }}
-        </router-link>
-      </div>
-    </transition>
+    <!-- 移动端：抽屉 + 遮罩（Teleport 到 body，避免被 navbar 的 backdrop-filter 困住） -->
+    <Teleport to="body">
+      <transition name="scrim">
+        <div v-if="mobileOpen" class="mobile-scrim" @click="mobileOpen = false"></div>
+      </transition>
+      <transition name="drawer">
+        <aside v-if="mobileOpen" class="mobile-drawer" aria-label="主导航">
+          <div class="drawer-head">
+            <span class="eyebrow">Navigation</span>
+            <button class="drawer-close" aria-label="关闭导航" @click="mobileOpen = false">
+              <AppIcon name="close" :size="18" />
+            </button>
+          </div>
+          <nav class="drawer-links">
+            <router-link
+              v-for="link in navLinks"
+              :key="link.to"
+              :to="link.to"
+              class="mobile-link"
+              @click="mobileOpen = false"
+            >
+              <AppIcon :name="link.icon" :size="18" />
+              {{ link.label }}
+            </router-link>
+          </nav>
+        </aside>
+      </transition>
+    </Teleport>
 
     <div class="nav-actions">
       <router-link to="/settings" class="avatar" :title="userStore.user?.nickname || userStore.user?.username">
@@ -51,7 +70,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'vue-toastification'
@@ -62,6 +81,21 @@ const userStore = useAuthStore()
 const toast = useToast()
 
 const mobileOpen = ref(false)
+
+function onKeydown(e) {
+  if (e.key === 'Escape') mobileOpen.value = false
+}
+
+onMounted(() => window.addEventListener('keydown', onKeydown))
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown)
+  document.body.style.overflow = ''
+})
+
+// 抽屉展开时锁定页面滚动
+watch(mobileOpen, (open) => {
+  document.body.style.overflow = open ? 'hidden' : ''
+})
 
 const avatarText = computed(
   () => userStore.user?.nickname?.[0] || userStore.user?.username?.[0] || 'U',
@@ -94,7 +128,7 @@ function handleLogout() {
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  background: $primary;
+  background: var(--primary);
   color: #fff;
   display: grid;
   place-items: center;
@@ -130,7 +164,7 @@ function handleLogout() {
     display: block;
     width: 22px;
     height: 2px;
-    background: $text-primary;
+    background: var(--text-primary);
     border-radius: 2px;
     transition: $transition-fast;
     transform-origin: center;
@@ -149,50 +183,100 @@ function handleLogout() {
   }
 }
 
-/* ===== 移动端下拉菜单 ===== */
-.mobile-menu {
+/* ===== 移动端：抽屉 + 遮罩 ===== */
+.mobile-scrim {
+  position: fixed;
+  inset: 64px 0 0 0;
+  background: rgba(26, 26, 26, 0.42);
+  backdrop-filter: blur(2px);
+  z-index: 98;
+}
+
+.mobile-drawer {
   position: fixed;
   top: 64px;
-  left: 0;
   right: 0;
   bottom: 0;
-  background: $bg-card;
-  border-top: 1px solid $border;
-  padding: $space-5;
+  width: min(300px, 82vw);
+  background: var(--bg-card);
+  border-left: 1px solid var(--border);
+  box-shadow: $shadow-lg;
+  padding: $space-4 $space-4 $space-5;
   display: flex;
   flex-direction: column;
-  gap: $space-2;
+  gap: $space-3;
+  overflow-y: auto;
   z-index: 99;
+}
+
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px $space-2;
+  border-bottom: 1px solid var(--border);
+}
+
+.drawer-close {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bg-light);
+    color: var(--text-primary);
+  }
+}
+
+.drawer-links {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
 }
 
 .mobile-link {
   display: flex;
   align-items: center;
   gap: $space-3;
-  padding: $space-3 $space-4;
+  padding: $space-3 $space-3;
   border-radius: $radius-sm;
-  color: $text-secondary;
+  color: var(--text-secondary);
   font-size: $text-base;
   text-decoration: none;
   transition: $transition-fast;
 
-  &:hover, &.router-link-active {
+  &:hover {
+    background: var(--bg-light);
+    color: var(--text-primary);
+  }
+
+  &.router-link-active {
     background: $primary-soft;
-    color: $primary;
+    color: var(--primary-text);
   }
 }
 
-.mb-enter-active,
-.mb-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+.scrim-enter-active,
+.scrim-leave-active {
+  transition: opacity 0.24s $ease-out;
 }
-.mb-enter-from {
+.scrim-enter-from,
+.scrim-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
 }
-.mb-leave-to {
-  opacity: 0;
-  transform: translateY(-4px);
+
+.drawer-enter-active,
+.drawer-leave-active {
+  transition: transform 0.24s $ease-out;
+}
+.drawer-enter-from,
+.drawer-leave-to {
+  transform: translateX(100%);
 }
 
 @media (max-width: 768px) {
@@ -206,6 +290,17 @@ function handleLogout() {
 
   .logout-btn span {
     display: none;
+  }
+}
+
+/* 769–1023px：7 项会挤，收起文字只留图标（悬停看 tooltip） */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .nav-link .nav-label {
+    display: none;
+  }
+
+  .nav-link {
+    padding: 8px 10px !important;
   }
 }
 </style>

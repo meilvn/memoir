@@ -1,6 +1,6 @@
 <template>
   <div class="not-found-page">
-    <div class="nf-content" data-reveal>
+    <div class="nf-content">
       <span class="nf-icon"><AppIcon name="image" :size="48" /></span>
       <h1 class="nf-title serif">404</h1>
       <p class="nf-desc">这张照片好像走丢了…</p>
@@ -36,20 +36,20 @@ import AppIcon from '@/components/AppIcon.vue'
   height: 80px;
   border-radius: 50%;
   background: $primary-soft;
-  color: $primary;
+  color: var(--primary);
   margin-bottom: $space-5;
 }
 
 .nf-title {
   font-size: $text-5xl;
   font-weight: 700;
-  color: $text-primary;
+  color: var(--text-primary);
   margin-bottom: $space-3;
 }
 
 .nf-desc {
   font-size: $text-lg;
-  color: $text-secondary;
+  color: var(--text-secondary);
   margin-bottom: $space-6;
 }
 </style>

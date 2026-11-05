@@ -160,9 +160,9 @@ async function submit() {
 .upload-head {
   margin-bottom: $space-6;
   padding: $space-6 $space-5;
-  background: linear-gradient(135deg, rgba($primary, 0.04) 0%, rgba($primary, 0.01) 100%);
+  background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.04) 0%, rgba(var(--primary-rgb), 0.01) 100%);
   border-radius: $radius-lg;
-  border: 1px solid $border;
+  border: 1px solid var(--border);
   text-align: center;
 }
 
@@ -173,34 +173,34 @@ async function submit() {
 }
 
 .page-sub {
-  color: $text-secondary;
+  color: var(--text-secondary);
   font-size: $text-sm;
   margin-top: $space-1;
 }
 
 /* ===== 拖拽区域 ===== */
 .drop-zone {
-  border: 2px dashed $border-strong;
+  border: 2px dashed var(--border-strong);
   border-radius: $radius-lg;
   padding: $space-8 $space-5;
   text-align: center;
   cursor: pointer;
-  background: $bg-card;
+  background: var(--bg-card);
   transition: $transition;
   position: relative;
   overflow: hidden;
 
   &:hover, &.active {
-    border-color: $primary;
-    background: linear-gradient(135deg, rgba($primary, 0.08) 0%, rgba($primary, 0.04) 100%);
+    border-color: var(--primary);
+    background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.08) 0%, rgba(var(--primary-rgb), 0.04) 100%);
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba($primary, 0.15);
+    box-shadow: 0 8px 24px rgba(var(--primary-rgb), 0.15);
   }
 
   &.hasFiles {
     border-style: solid;
-    border-color: $border;
-    background: $bg-light;
+    border-color: var(--border);
+    background: var(--bg-light);
     padding: $space-4 $space-5;
   }
 }
@@ -220,19 +220,19 @@ async function submit() {
   height: 56px;
   border-radius: 50%;
   background: $primary-soft;
-  color: $primary;
+  color: var(--primary);
   margin-bottom: $space-2;
 }
 
 .drop-text {
   font-size: $text-base;
   font-weight: 500;
-  color: $text-primary;
+  color: var(--text-primary);
 }
 
 .drop-hint {
   font-size: $text-sm;
-  color: $text-muted;
+  color: var(--text-muted);
   margin-top: 4px;
 }
 
@@ -259,20 +259,20 @@ async function submit() {
   align-items: center;
   margin-bottom: $space-3;
   font-size: $text-sm;
-  color: $text-secondary;
+  color: var(--text-secondary);
 }
 
 .link-btn {
   background: none;
   border: none;
-  color: $error;
+  color: var(--error);
   cursor: pointer;
   font-size: $text-sm;
   padding: 4px 8px;
   border-radius: $radius-sm;
 
   &:hover {
-    background: rgba($error, 0.08);
+    background: rgba(var(--error-rgb), 0.08);
   }
 }
 
@@ -287,8 +287,8 @@ async function submit() {
   aspect-ratio: 1;
   border-radius: $radius-sm;
   overflow: hidden;
-  border: 1px solid $border;
-  background: $bg-light;
+  border: 1px solid var(--border);
+  background: var(--bg-light);
 
   img, video {
     width: 100%;
@@ -318,7 +318,7 @@ async function submit() {
   transition: $transition-fast;
 
   &:hover {
-    background: $error;
+    background: var(--error);
   }
 }
 
@@ -338,11 +338,11 @@ async function submit() {
 .upload-error {
   margin-top: $space-4;
   padding: $space-3 $space-4;
-  background: rgba($error, 0.08);
-  color: $error;
+  background: rgba(var(--error-rgb), 0.08);
+  color: var(--error);
   border-radius: $radius-sm;
   font-size: $text-sm;
-  border: 1px solid rgba($error, 0.2);
+  border: 1px solid rgba(var(--error-rgb), 0.2);
 }
 
 .upload-actions {

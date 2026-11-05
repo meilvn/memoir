@@ -39,7 +39,7 @@
     </div>
 
     <div v-else-if="albums.length" class="albums-grid">
-      <div v-for="album in albums" :key="album.id" class="album-card card" @click="goDetail(album.id)">
+      <div v-for="album in albums" :key="album.id" class="album-card card" v-focusable @click="goDetail(album.id)">
         <div class="album-cover">
           <img v-if="album.coverPath" :src="mediaStore.getMediaUrl(album.coverPath)" :alt="album.name" />
           <div v-else class="album-placeholder">
@@ -157,9 +157,9 @@ function goDetail(id) {
   align-items: flex-start;
   margin-bottom: $space-6;
   padding: $space-5;
-  background: linear-gradient(135deg, rgba($primary, 0.04) 0%, rgba($primary, 0.01) 100%);
+  background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.04) 0%, rgba(var(--primary-rgb), 0.01) 100%);
   border-radius: $radius-lg;
-  border: 1px solid $border;
+  border: 1px solid var(--border);
 }
 
 .page-title {
@@ -199,7 +199,7 @@ function goDetail(id) {
   label {
     display: block;
     font-size: $text-sm;
-    color: $text-secondary;
+    color: var(--text-secondary);
     margin-bottom: 6px;
   }
 }
@@ -207,21 +207,21 @@ function goDetail(id) {
 .input {
   width: 100%;
   padding: 10px 14px;
-  border: 1px solid $border;
+  border: 1px solid var(--border);
   border-radius: $radius-sm;
-  background: $bg-warm;
-  color: $text-primary;
+  background: var(--bg-warm);
+  color: var(--text-primary);
   font-family: inherit;
   font-size: $text-base;
   transition: $transition-fast;
 
   &:focus {
     outline: none;
-    border-color: $primary;
+    border-color: var(--primary);
   }
 
   &::placeholder {
-    color: $text-muted;
+    color: var(--text-muted);
   }
 }
 
@@ -254,7 +254,7 @@ function goDetail(id) {
 .album-cover {
   position: relative;
   aspect-ratio: 16 / 10;
-  background: $bg-light;
+  background: var(--bg-light);
   overflow: hidden;
 
   img {
@@ -270,8 +270,8 @@ function goDetail(id) {
     height: 100%;
     display: grid;
     place-items: center;
-    color: $text-muted;
-    background: $bg-light;
+    color: var(--text-muted);
+    background: var(--bg-light);
   }
 
   &:hover img {
@@ -311,7 +311,7 @@ function goDetail(id) {
 
 .album-desc {
   font-size: $text-sm;
-  color: $text-muted;
+  color: var(--text-muted);
   margin-bottom: $space-2;
   white-space: nowrap;
   overflow: hidden;
@@ -328,7 +328,7 @@ function goDetail(id) {
 .skeleton-album {
   aspect-ratio: 16 / 10;
   border-radius: $radius-md;
-  background: linear-gradient(90deg, $bg-light 25%, lighten($bg-light, 2%) 50%, $bg-light 75%);
+  background: linear-gradient(90deg, var(--bg-light) 25%, color-mix(in srgb, var(--bg-light) 93%, white) 50%, var(--bg-light) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }

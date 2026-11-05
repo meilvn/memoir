@@ -30,6 +30,10 @@ export class Note {
   @Column({ name: 'tags', type: 'jsonb', nullable: true })
   tags: string[]
 
+  // 故事附加照片（最多 8 张；封面仍是 mediaId，总计最多 9 张）
+  @Column({ name: 'extra_media_ids', type: 'jsonb', nullable: true })
+  extraMediaIds: string[] | null
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date
 

@@ -1,6 +1,6 @@
 <template>
   <div class="gallery-page">
-    <header class="gallery-header" data-reveal>
+    <header class="gallery-header">
       <div>
         <p class="eyebrow">Gallery</p>
         <h1 class="page-title serif">回忆画廊</h1>
@@ -57,9 +57,9 @@
         >
           <AppIcon name="check" :size="15" />
         </button>
-        <router-link to="/upload" class="upload-trigger" title="上传回忆">
+        <router-link to="/upload" class="upload-trigger" title="上传页">
           <AppIcon name="upload" :size="16" />
-          <span>上传</span>
+          <span>上传页</span>
         </router-link>
         <label class="upload-btn btn btn-primary">
           <AppIcon name="upload" :size="15" />
@@ -108,7 +108,7 @@
     </header>
 
     <!-- 标签云 -->
-    <section v-if="tags.length" class="tag-cloud" data-reveal>
+    <section v-if="tags.length" class="tag-cloud">
       <div class="tag-cloud-head">
         <span class="tag-cloud-title"><AppIcon name="tag" :size="14" />标签</span>
         <button class="tag-cloud-toggle" @click="tagsExpanded = !tagsExpanded">
@@ -167,6 +167,7 @@
         v-for="(media, i) in sortedItems"
         :key="media.id"
         v-reveal="Math.min(i, 12) * 40"
+        v-focusable
         class="media-card"
         :class="{ selectable: batchMode, selected: selectedIds.has(media.id) }"
         @click="batchMode ? toggleSelect(media, $event) : openLightbox(i)"
@@ -331,6 +332,49 @@ function onCardMouseMove(e, el) {
 
 // 全局鼠标跟踪：处理鼠标在卡片间移动的情况
 let lastHoveredCard = null
+let isTrackingInitialized = false // 防止重复初始化
+
+// 缓存 CSS 变量，避免在 mousemove 中频繁调用 getComputedStyle
+const tiltConfig = {
+  angle: 1.5,
+  lift: -4,
+  perspective: 800
+}
+
+// 读取并缓存 CSS 变量值
+function updateTiltConfig() {
+  try {
+    const style = getComputedStyle(document.documentElement)
+    tiltConfig.angle = parseFloat(style.getPropertyValue('--tilt-angle')) || 1.5
+    tiltConfig.lift = parseFloat(style.getPropertyValue('--tilt-lift')) || -4
+    tiltConfig.perspective = parseFloat(style.getPropertyValue('--perspective')) || 800
+  } catch (e) {
+    // 使用默认值
+  }
+}
+
+// 应用 3D 倾斜效果（带边界检查）
+function applyTiltEffect(card, e) {
+  const rect = card.getBoundingClientRect()
+
+  // 边界检查：防止除以零
+  if (rect.width === 0 || rect.height === 0) return
+
+  // 限制坐标在元素范围内
+  const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width))
+  const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height))
+
+  const centerX = rect.width / 2
+  const centerY = rect.height / 2
+
+  // 限制最大旋转角度，防止过度倾斜
+  const maxAngle = tiltConfig.angle * 1.5
+  const rotateX = Math.max(-maxAngle, Math.min(((y - centerY) / centerY) * -tiltConfig.angle, maxAngle))
+  const rotateY = Math.max(-maxAngle, Math.min(((x - centerX) / centerX) * tiltConfig.angle, maxAngle))
+
+  // 使用 transform3d 强制 GPU 加速
+  card.style.transform = `perspective(${tiltConfig.perspective}px) translate3d(0, ${tiltConfig.lift}px, 0) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`
+}
 
 function handleGlobalMouseMove(e) {
   if (batchMode.value) return
@@ -348,20 +392,7 @@ function handleGlobalMouseMove(e) {
     if (rafId) return
 
     rafId = requestAnimationFrame(() => {
-      const rect = card.getBoundingClientRect()
-      const x = e.clientX - rect.left
-      const y = e.clientY - rect.top
-      const centerX = rect.width / 2
-      const centerY = rect.height / 2
-
-      const tiltAngle = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tilt-angle')) || 1.5
-      const tiltLift = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tilt-lift')) || -4
-      const perspective = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--perspective')) || 800
-
-      const rotateX = ((y - centerY) / centerY) * -tiltAngle
-      const rotateY = ((x - centerX) / centerX) * tiltAngle
-      card.style.transform = `perspective(${perspective}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(${tiltLift}px)`
-
+      applyTiltEffect(card, e)
       lastHoveredCard = card
       rafId = null
     })
@@ -372,7 +403,15 @@ function handleGlobalMouseMove(e) {
 
 function handleGlobalMouseLeave() {
   if (lastHoveredCard) {
+    // 添加平滑过渡类
+    lastHoveredCard.classList.add('media-card--resetting')
     lastHoveredCard.style.transform = ''
+
+    // 移除过渡类（延迟 300ms，与 CSS transition 匹配）
+    setTimeout(() => {
+      lastHoveredCard?.classList.remove('media-card--resetting')
+    }, 300)
+
     lastHoveredCard = null
   }
   if (rafId) {
@@ -383,20 +422,47 @@ function handleGlobalMouseLeave() {
 
 // 设置全局鼠标跟踪
 let mouseTracker = null
+let initRetries = 0
+const MAX_INIT_RETRIES = 5
 
 function setupGlobalMouseTracking() {
+  // 防止重复初始化
+  if (isTrackingInitialized) {
+    console.log('⚠️ Mouse tracking already initialized, skipping')
+    return
+  }
+
   const gallery = document.querySelector('.masonry-gallery')
   if (!gallery) {
     console.warn('❌ Gallery element not found for mouse tracking')
+
+    // 重试机制：DOM 可能还未完全渲染
+    if (initRetries < MAX_INIT_RETRIES) {
+      initRetries++
+      console.log(`⏳ Retrying initialization (${initRetries}/${MAX_INIT_RETRIES})...`)
+      setTimeout(() => {
+        setupGlobalMouseTracking()
+      }, 200)
+    } else {
+      console.error('❌ Failed to initialize mouse tracking after maximum retries')
+    }
     return
   }
+
+  // 找到画廊元素，重置重试计数
+  initRetries = 0
 
   mouseTracker = (e) => handleGlobalMouseMove(e)
   const leaveTracker = () => handleGlobalMouseLeave()
 
+  // 缓存 CSS 变量值
+  updateTiltConfig()
+
   gallery.addEventListener('mousemove', mouseTracker)
   gallery.addEventListener('mouseleave', leaveTracker)
+  isTrackingInitialized = true
   console.log('✅ Global mouse tracking initialized on', gallery)
+  console.log('📐 Tilt config:', tiltConfig)
 }
 
 function cleanupGlobalMouseTracking() {
@@ -408,16 +474,14 @@ function cleanupGlobalMouseTracking() {
       console.log('🧹 Global mouse tracking cleaned up')
     }
     mouseTracker = null
+    isTrackingInitialized = false
+    initRetries = 0
   }
 }
 
-function onCardMouseLeave(el) {
-  if (rafId) {
-    cancelAnimationFrame(rafId)
-    rafId = null
-  }
-  el.style.transform = ''
-}
+// 鼠标离开时的平滑过渡类
+const RESET_TRANSITION_DURATION = 300
+
 try {
   const saved = JSON.parse(localStorage.getItem('gallery-prefs') || '{}')
   if (saved.viewMode) viewMode.value = saved.viewMode
@@ -451,11 +515,26 @@ const sortedItems = computed(() => {
   }
 })
 
+// 监听 sortedItems 变化，当画廊从无到有时重新初始化
+watch(sortedItems, (newItems, oldItems) => {
+  if (newItems.length > 0 && (!oldItems || oldItems.length === 0)) {
+    // 画廊元素刚被创建
+    console.log('Gallery element created, initializing mouse tracking...')
+    setTimeout(() => {
+      setupGlobalMouseTracking()
+    }, 100)
+  }
+})
+
 onMounted(async () => {
   await loadMedia()
   loadTags()
   await nextTick()
   setupInfiniteScroll()
+  // 首次渲染
+  setTimeout(() => {
+    setupGlobalMouseTracking()
+  }, 100)
 })
 
 onBeforeUnmount(() => {
@@ -552,11 +631,9 @@ async function loadMedia(reset = true) {
     total.value = data.total
     hasMore.value = items.value.length < total.value
 
-    // 数据加载完成后，重新初始化鼠标跟踪
-    // 因为 DOM 可能因数据更新而重建
-    await nextTick()
-    cleanupGlobalMouseTracking()
-    setupGlobalMouseTracking()
+    // 注意：不在这里初始化鼠标跟踪
+    // 因为此时 loading 可能还为 true，.masonry-gallery 元素可能还未渲染
+    // 而是在 onMounted 中统一初始化（在 loading = false 之后）
   } catch {
     toast.error('加载失败')
   } finally {
@@ -735,16 +812,16 @@ function formatDuration(seconds) {
   flex-wrap: wrap;
   gap: $space-4;
   padding: $space-5;
-  background: linear-gradient(135deg, rgba($primary, 0.03) 0%, rgba($primary, 0.01) 100%);
+  background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.03) 0%, rgba(var(--primary-rgb), 0.01) 100%);
   border-radius: $radius-lg;
-  border: 1px solid $border;
+  border: 1px solid var(--border);
 }
 
 .eyebrow {
   font-size: $text-xs;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: $text-muted;
+  color: var(--text-muted);
   margin-bottom: $space-1;
 }
 
@@ -766,17 +843,17 @@ function formatDuration(seconds) {
   gap: 6px;
   padding: 9px 16px;
   border-radius: $radius-full;
-  background: $primary;
+  background: var(--primary);
   color: #fff;
   font-size: $text-sm;
   font-weight: 500;
   text-decoration: none;
   transition: $transition;
-  box-shadow: 0 2px 8px rgba($primary, 0.25);
+  box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.25);
 
   &:hover {
     background: $primary-dark;
-    box-shadow: 0 4px 12px rgba($primary, 0.35);
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.35);
     transform: translateY(-1px);
   }
 }
@@ -791,33 +868,33 @@ function formatDuration(seconds) {
 .search-icon {
   position: absolute;
   left: 14px;
-  color: $text-muted;
+  color: var(--text-muted);
   pointer-events: none;
 }
 
 .search-input {
   width: 220px;
   padding: 9px 34px 9px 36px;
-  border: 1px solid $border;
+  border: 1px solid var(--border);
   border-radius: $radius-full;
-  background: $bg-card;
-  color: $text-primary;
+  background: var(--bg-card);
+  color: var(--text-primary);
   font-size: $text-sm;
   font-family: inherit;
   transition: $transition-fast;
   appearance: none;
 
   &::placeholder {
-    color: $text-muted;
+    color: var(--text-muted);
   }
 
   &:hover {
-    border-color: $border-strong;
+    border-color: var(--border-strong);
   }
 
   &:focus {
     outline: none;
-    border-color: $primary;
+    border-color: var(--primary);
     width: 260px;
   }
 
@@ -837,14 +914,14 @@ function formatDuration(seconds) {
   height: 20px;
   border: none;
   border-radius: $radius-full;
-  background: $bg-light;
-  color: $text-secondary;
+  background: var(--bg-light);
+  color: var(--text-secondary);
   cursor: pointer;
   transition: $transition-fast;
 
   &:hover {
-    background: $border-strong;
-    color: $text-primary;
+    background: var(--border-strong);
+    color: var(--text-primary);
   }
 }
 
@@ -852,14 +929,14 @@ function formatDuration(seconds) {
 .result-bar {
   margin-bottom: $space-4;
   padding: $space-2 $space-4;
-  border-left: 2px solid $primary;
+  border-left: 2px solid var(--primary);
   background: $primary-soft;
   border-radius: 0 $radius-sm $radius-sm 0;
   font-size: $text-sm;
-  color: $text-secondary;
+  color: var(--text-secondary);
 
   strong {
-    color: $primary;
+    color: var(--primary);
     font-weight: 600;
   }
 }
@@ -868,7 +945,7 @@ function formatDuration(seconds) {
   margin-left: $space-3;
   border: none;
   background: none;
-  color: $primary;
+  color: var(--primary);
   font-size: $text-xs;
   font-family: inherit;
   cursor: pointer;
@@ -884,8 +961,8 @@ function formatDuration(seconds) {
 .tag-cloud {
   margin-bottom: $space-5;
   padding: $space-4 $space-5;
-  background: linear-gradient(135deg, $bg-card 0%, rgba($primary-soft, 0.3) 100%);
-  border: 1px solid $border;
+  background: linear-gradient(135deg, var(--bg-card) 0%, rgba(var(--primary-rgb), 0.024) 100%);
+  border: 1px solid var(--border);
   border-radius: $radius-md;
   box-shadow: $shadow-sm;
 }
@@ -903,7 +980,7 @@ function formatDuration(seconds) {
   gap: 6px;
   font-size: $text-sm;
   font-weight: 600;
-  color: $text-secondary;
+  color: var(--text-secondary);
 }
 
 .tag-cloud-toggle {
@@ -912,14 +989,14 @@ function formatDuration(seconds) {
   gap: 4px;
   border: none;
   background: none;
-  color: $text-muted;
+  color: var(--text-muted);
   font-size: $text-xs;
   font-family: inherit;
   cursor: pointer;
   transition: $transition-fast;
 
   &:hover {
-    color: $primary;
+    color: var(--primary);
   }
 }
 
@@ -941,24 +1018,24 @@ function formatDuration(seconds) {
   align-items: center;
   gap: 5px;
   padding: 5px $space-3;
-  border: 1px solid $border;
+  border: 1px solid var(--border);
   border-radius: $radius-full;
-  background: $bg-warm;
-  color: $text-secondary;
+  background: var(--bg-warm);
+  color: var(--text-secondary);
   font-size: $text-sm;
   font-family: inherit;
   cursor: pointer;
   transition: $transition-fast;
 
   &:hover {
-    border-color: $primary;
-    color: $primary;
+    border-color: var(--primary);
+    color: var(--primary);
     background: $primary-soft;
   }
 
   &.active {
-    background: $primary;
-    border-color: $primary;
+    background: var(--primary);
+    border-color: var(--primary);
     color: #fff;
   }
 }
@@ -978,29 +1055,29 @@ function formatDuration(seconds) {
 .filter-icon {
   position: absolute;
   left: 14px;
-  color: $text-muted;
+  color: var(--text-muted);
   pointer-events: none;
 }
 
 .filter-select {
   appearance: none;
   padding: 9px $space-4 9px 36px;
-  border: 1px solid $border;
+  border: 1px solid var(--border);
   border-radius: $radius-full;
-  background: $bg-card;
-  color: $text-primary;
+  background: var(--bg-card);
+  color: var(--text-primary);
   font-size: $text-sm;
   font-family: inherit;
   cursor: pointer;
   transition: $transition-fast;
 
   &:hover {
-    border-color: $border-strong;
+    border-color: var(--border-strong);
   }
 
   &:focus {
     outline: none;
-    border-color: $primary;
+    border-color: var(--primary);
   }
 }
 
@@ -1015,23 +1092,23 @@ function formatDuration(seconds) {
   align-items: center;
   gap: 6px;
   padding: 9px $space-4;
-  border: 1px solid $border;
+  border: 1px solid var(--border);
   border-radius: $radius-full;
-  background: $bg-card;
-  color: $text-secondary;
+  background: var(--bg-card);
+  color: var(--text-secondary);
   font-size: $text-sm;
   font-family: inherit;
   cursor: pointer;
   transition: $transition-fast;
 
   &:hover {
-    border-color: $primary;
-    color: $primary;
+    border-color: var(--primary);
+    color: var(--primary);
   }
 
   &.active {
-    background: $primary;
-    border-color: $primary;
+    background: var(--primary);
+    border-color: var(--primary);
     color: #fff;
 
     :deep(.app-icon path) {
@@ -1047,23 +1124,23 @@ function formatDuration(seconds) {
   justify-content: center;
   width: 38px;
   height: 38px;
-  border: 1px solid $border;
+  border: 1px solid var(--border);
   border-radius: $radius-full;
-  background: $bg-card;
-  color: $text-secondary;
+  background: var(--bg-card);
+  color: var(--text-secondary);
   cursor: pointer;
   transition: $transition-fast;
 
   &:hover {
-    border-color: $primary;
-    color: $primary;
+    border-color: var(--primary);
+    color: var(--primary);
     background: $primary-soft;
   }
 
   &.active {
     background: $primary-soft;
-    border-color: $primary;
-    color: $primary;
+    border-color: var(--primary);
+    color: var(--primary);
   }
 }
 
@@ -1088,7 +1165,7 @@ function formatDuration(seconds) {
   padding: 0;
 
   &:hover {
-    background: $error;
+    background: var(--error);
   }
 
   .media-card:hover & {
@@ -1154,12 +1231,12 @@ function formatDuration(seconds) {
   }
 
   &.selected {
-    outline: 2px solid $primary;
+    outline: 2px solid var(--primary);
     outline-offset: -2px;
 
     .card-check {
-      background: $primary;
-      border-color: $primary;
+      background: var(--primary);
+      border-color: var(--primary);
     }
   }
 }
@@ -1170,15 +1247,15 @@ function formatDuration(seconds) {
   align-items: center;
   gap: $space-3;
   padding: $space-3 $space-4;
-  background: linear-gradient(135deg, rgba($primary, 0.08) 0%, rgba($primary, 0.04) 100%);
-  border: 1px solid rgba($primary, 0.2);
+  background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.08) 0%, rgba(var(--primary-rgb), 0.04) 100%);
+  border: 1px solid rgba(var(--primary-rgb), 0.2);
   border-radius: $radius-md;
   margin-bottom: $space-4;
   box-shadow: $shadow-sm;
 
   .batch-count {
     font-weight: 600;
-    color: $primary;
+    color: var(--primary);
     margin-right: $space-2;
   }
 
@@ -1187,37 +1264,37 @@ function formatDuration(seconds) {
     align-items: center;
     gap: 6px;
     padding: 7px $space-3;
-    border: 1px solid $border;
+    border: 1px solid var(--border);
     border-radius: $radius-sm;
-    background: $bg-card;
-    color: $text-secondary;
+    background: var(--bg-card);
+    color: var(--text-secondary);
     font-size: $text-sm;
     font-family: inherit;
     cursor: pointer;
     transition: $transition-fast;
 
     &:hover {
-      border-color: $primary;
-      color: $primary;
+      border-color: var(--primary);
+      color: var(--primary);
     }
 
     &.danger {
-      color: $error;
-      border-color: rgba($error, 0.3);
+      color: var(--error);
+      border-color: rgba(var(--error-rgb), 0.3);
 
       &:hover {
-        background: rgba($error, 0.08);
-        border-color: $error;
+        background: rgba(var(--error-rgb), 0.08);
+        border-color: var(--error);
       }
     }
 
     &.ghost {
       background: none;
       border-color: transparent;
-      color: $text-muted;
+      color: var(--text-muted);
 
       &:hover {
-        color: $text-primary;
+        color: var(--text-primary);
       }
     }
   }
@@ -1236,7 +1313,7 @@ function formatDuration(seconds) {
 .scroll-sentinel {
   text-align: center;
   padding: $space-6 $space-5;
-  color: $text-muted;
+  color: var(--text-muted);
   font-size: $text-sm;
 }
 
@@ -1250,7 +1327,7 @@ function formatDuration(seconds) {
     content: '';
     width: 24px;
     height: 1px;
-    background: $border;
+    background: var(--border);
   }
 }
 
@@ -1306,7 +1383,7 @@ function formatDuration(seconds) {
   .grid-filename {
     font-size: $text-sm;
     font-weight: 500;
-    color: $text-primary;
+    color: var(--text-primary);
     margin-bottom: 4px;
     white-space: nowrap;
     overflow: hidden;
@@ -1315,7 +1392,7 @@ function formatDuration(seconds) {
 
   .grid-date {
     font-size: $text-xs;
-    color: $text-muted;
+    color: var(--text-muted);
     letter-spacing: 0.04em;
   }
 }
@@ -1327,11 +1404,10 @@ function formatDuration(seconds) {
   overflow: hidden;
   cursor: pointer;
   position: relative;
-  background: $bg-light;
-  border: 1px solid $border;
+  background: var(--bg-light);
+  border: 1px solid var(--border);
   transform-style: preserve-3d;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.35s ease;
   // 启用 GPU 加速
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
@@ -1339,11 +1415,7 @@ function formatDuration(seconds) {
 
   &:hover {
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
-    border-color: $border-strong;
-
-    img {
-      transform: scale(1.04);
-    }
+    border-color: var(--border-strong);
 
     .card-overlay {
       opacity: 1;
@@ -1353,13 +1425,18 @@ function formatDuration(seconds) {
   img {
     width: 100%;
     display: block;
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s;
-    will-change: transform, opacity;
+    transition: opacity 0.2s;
+    will-change: opacity;
   }
 
   &.selected {
-    border-color: $primary;
+    border-color: var(--primary);
     box-shadow: 0 0 0 2px $primary-soft, 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+
+  // 平滑过渡：鼠标离开时
+  &--resetting {
+    transition: transform 0.3s ease-in !important;
   }
 }
 
@@ -1401,7 +1478,7 @@ function formatDuration(seconds) {
   .img-shimmer {
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, $bg-light 25%, lighten($bg-light, 2%) 50%, $bg-light 75%);
+    background: linear-gradient(90deg, var(--bg-light) 25%, color-mix(in srgb, var(--bg-light) 93%, white) 50%, var(--bg-light) 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
     pointer-events: none;
@@ -1478,7 +1555,7 @@ function formatDuration(seconds) {
 .empty-state {
   text-align: center;
   padding: $space-8 $space-5;
-  color: $text-secondary;
+  color: var(--text-secondary);
 
   p {
     margin: $space-4 0 $space-5;
@@ -1487,7 +1564,7 @@ function formatDuration(seconds) {
 }
 
 .empty-icon {
-  color: $text-muted;
+  color: var(--text-muted);
 }
 
 /* ===== 日期筛选器 ===== */
@@ -1496,8 +1573,8 @@ function formatDuration(seconds) {
   align-items: center;
   gap: $space-3;
   padding: $space-3 $space-4;
-  background: $bg-card;
-  border: 1px solid $border;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: $radius-md;
   margin-bottom: $space-4;
   animation: fade-up 0.3s ease;
@@ -1517,40 +1594,40 @@ function formatDuration(seconds) {
 
   label {
     font-size: $text-xs;
-    color: $text-muted;
+    color: var(--text-muted);
   }
 }
 
 .date-input {
   padding: 6px 10px;
-  border: 1px solid $border;
+  border: 1px solid var(--border);
   border-radius: $radius-sm;
-  background: $bg-warm;
-  color: $text-primary;
+  background: var(--bg-warm);
+  color: var(--text-primary);
   font-family: inherit;
   font-size: $text-sm;
 
   &:focus {
     outline: none;
-    border-color: $primary;
+    border-color: var(--primary);
   }
 }
 
 .date-sep {
-  color: $text-muted;
+  color: var(--text-muted);
   margin-top: 16px;
 }
 
 .date-clear {
   background: none;
   border: none;
-  color: $text-muted;
+  color: var(--text-muted);
   cursor: pointer;
   font-size: $text-sm;
   padding: 4px 8px;
 
   &:hover {
-    color: $error;
+    color: var(--error);
   }
 }
 
@@ -1570,7 +1647,7 @@ function formatDuration(seconds) {
   gap: 6px;
   padding: 5px $space-3;
   background: $primary-soft;
-  color: $primary;
+  color: var(--primary);
   border-radius: $radius-full;
   font-size: $text-xs;
   font-weight: 500;
@@ -1579,13 +1656,13 @@ function formatDuration(seconds) {
 .pill-clear {
   background: none;
   border: none;
-  color: $text-muted;
+  color: var(--text-muted);
   cursor: pointer;
   font-size: $text-xs;
   padding: 4px 8px;
 
   &:hover {
-    color: $error;
+    color: var(--error);
   }
 }
 

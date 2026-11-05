@@ -35,7 +35,7 @@ defineProps({
 .skeleton-media {
   flex: 1;
   min-height: 0;
-  background: linear-gradient(90deg, $bg-light 25%, lighten($bg-light, 3%) 50%, $bg-light 75%);
+  background: linear-gradient(90deg, var(--bg-light) 25%, color-mix(in srgb, var(--bg-light) 90%, white) 50%, var(--bg-light) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: $radius-sm;

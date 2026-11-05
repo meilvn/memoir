@@ -60,7 +60,7 @@
     </div>
 
     <div v-else-if="albumMedia.length" class="masonry-gallery">
-      <div v-for="media in albumMedia" :key="media.id" class="media-card" @click="goDetail(media.id)">
+      <div v-for="media in albumMedia" :key="media.id" class="media-card" v-focusable @click="goDetail(media.id)">
         <img :src="mediaStore.getMediaUrl(media.thumbnailPath)" :alt="media.filename" loading="lazy" />
         <div class="card-overlay">
           <span class="type-badge">
@@ -200,8 +200,8 @@ async function addSelected() {
   gap: $space-4;
   margin-bottom: $space-6;
   padding: $space-5;
-  background: linear-gradient(135deg, rgba($primary, 0.04) 0%, rgba($primary, 0.01) 100%);
-  border: 1px solid $border;
+  background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.04) 0%, rgba(var(--primary-rgb), 0.01) 100%);
+  border: 1px solid var(--border);
   border-radius: $radius-lg;
 }
 
@@ -211,7 +211,7 @@ async function addSelected() {
 }
 
 .album-desc {
-  color: $text-secondary;
+  color: var(--text-secondary);
   margin-top: 4px;
   font-size: $text-sm;
 }
@@ -225,7 +225,7 @@ async function addSelected() {
 
 .album-meta {
   font-size: $text-sm;
-  color: $text-muted;
+  color: var(--text-muted);
 }
 
 .modal-overlay {
@@ -280,18 +280,18 @@ async function addSelected() {
   }
 
   &.selected {
-    border-color: $primary;
+    border-color: var(--primary);
   }
 
   &:hover {
-    border-color: $border-strong;
+    border-color: var(--border-strong);
   }
 }
 
 .add-check {
   position: absolute;
   inset: 0;
-  background: rgba($primary, 0.6);
+  background: rgba(var(--primary-rgb), 0.6);
   display: grid;
   place-items: center;
   color: #fff;
@@ -320,8 +320,8 @@ async function addSelected() {
   overflow: hidden;
   cursor: pointer;
   position: relative;
-  background: $bg-light;
-  border: 1px solid $border;
+  background: var(--bg-light);
+  border: 1px solid var(--border);
   transition: $transition;
 
   &:hover {

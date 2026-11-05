@@ -10,14 +10,53 @@
 }
 
 :root {
-  --primary: #{$primary};
-  --primary-light: #{$primary-light};
-  --bg-warm: #{$bg-warm};
-  --bg-light: #{$bg-light};
-  --bg-card: #{$bg-card};
-  --text-primary: #{$text-primary};
-  --text-secondary: #{$text-secondary};
+  /* —— 浅色（默认，暖纸）—— */
+  --primary: #C96F4A;
+  --primary-rgb: 201, 111, 74;
+  --primary-light: #E09B7D;
+  --primary-dark: #A85635;
+  --primary-text: #A85635;
+  --primary-text-rgb: 168, 86, 53;
+  --bg-warm: #F8F5F0;
+  --bg-light: #F0EBE4;
+  --bg-card: #FFFFFF;
+  --bg-card-rgb: 255, 255, 255;
+  --text-primary: #1A1A1A;
+  --text-secondary: #5A5A5A;
+  --text-muted: #6B665F;
+  --border: #E5DDD2;
+  --border-strong: #D0C4B5;
+  --error: #B14E40;
+  --error-rgb: 177, 78, 64;
+  --success: #3C6F52;
+  --warning: #8A6120;
+  --radius-sm: #{$radius-sm};
   --radius-md: #{$radius-md};
+  --radius-lg: #{$radius-lg};
+  --ease-out: #{$ease-out};
+}
+
+/* —— 深色（暖墨）：只覆盖语义色，间距/圆角/字阶不动 —— */
+[data-theme="dark"] {
+  --primary: #C96F4A;
+  --primary-rgb: 201, 111, 74;
+  --primary-light: #D9825E;
+  --primary-dark: #8A4829;
+  --primary-text: #D9825E;
+  --primary-text-rgb: 217, 130, 94;
+  --bg-warm: #1C1916;
+  --bg-light: #2A2621;
+  --bg-card: #24201C;
+  --bg-card-rgb: 36, 32, 28;
+  --text-primary: #F3EFE9;
+  --text-secondary: #C7BFB4;
+  --text-muted: #A39A8F;
+  --border: #3A342D;
+  --border-strong: #4A433A;
+  --error: #D97A6C;
+  --error-rgb: 217, 122, 108;
+  --success: #7FB08C;
+  --warning: #D39B5E;
 }
 
 html {
@@ -26,8 +65,8 @@ html {
 
 body {
   font-family: $font-sans;
-  background: $bg-warm;
-  color: $text-primary;
+  background: var(--bg-warm);
+  color: var(--text-primary);
   font-size: $text-base;
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
@@ -42,7 +81,7 @@ body {
 }
 
 a {
-  color: $primary;
+  color: var(--primary-text);
   text-decoration: none;
   transition: $transition-fast;
 }
@@ -66,10 +105,6 @@ img {
   display: block;
 }
 
-::selection {
-  background: rgba($primary, 0.18);
-}
-
 // ===== 排版工具 =====
 .serif {
   font-family: $font-serif;
@@ -80,7 +115,7 @@ img {
   font-size: $text-xs;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: $text-muted;
+  color: var(--text-muted);
   font-weight: 500;
 }
 
@@ -90,7 +125,7 @@ img {
   justify-content: space-between;
   margin-bottom: $space-5;
   padding-bottom: $space-3;
-  border-bottom: 1px solid $border;
+  border-bottom: 1px solid var(--border);
 
   h2 {
     font-family: $font-serif;
@@ -104,10 +139,10 @@ img {
     align-items: center;
     gap: 4px;
     font-size: $text-sm;
-    color: $text-secondary;
+    color: var(--text-secondary);
 
     &:hover {
-      color: $primary;
+      color: var(--primary-text);
     }
   }
 }
@@ -140,7 +175,7 @@ img {
   justify-content: space-between;
   height: 64px;
   padding: 0 $space-6;
-  background: rgba($bg-card, 0.92);
+  background: rgba(var(--bg-card-rgb), 0.92);
   backdrop-filter: blur(16px) saturate(180%);
   border-bottom: 1px solid transparent;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
@@ -156,7 +191,7 @@ img {
     font-family: $font-serif;
     font-size: $text-lg;
     font-weight: 600;
-    color: $text-primary;
+    color: var(--text-primary);
     letter-spacing: 0.02em;
     cursor: pointer;
 
@@ -164,7 +199,7 @@ img {
       width: 30px;
       height: 30px;
       border-radius: 8px;
-      background: $primary;
+      background: var(--primary);
       color: #fff;
       display: grid;
       place-items: center;
@@ -182,19 +217,19 @@ img {
       gap: 6px;
       padding: 8px 14px;
       border-radius: $radius-sm;
-      color: $text-secondary;
+      color: var(--text-secondary);
       font-size: $text-sm;
       font-weight: 500;
       position: relative;
       transition: $transition-fast;
 
       &:hover {
-        color: $text-primary;
-        background: $bg-light;
+        color: var(--text-primary);
+        background: var(--bg-light);
       }
 
       &.router-link-active {
-        color: $primary;
+        color: var(--primary-text);
         background: transparent;
 
         // 编辑式下划线指示器
@@ -206,8 +241,8 @@ img {
           bottom: 2px;
           height: 2px;
           border-radius: 2px;
-          background: $primary;
-          animation: slide-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          background: var(--primary);
+          animation: slide-in 0.24s cubic-bezier(0.4, 0, 0.2, 1);
         }
       }
     }
@@ -233,7 +268,7 @@ img {
       width: 34px;
       height: 34px;
       border-radius: 50%;
-      background: $primary;
+      background: var(--primary);
       color: white;
       display: grid;
       place-items: center;
@@ -251,8 +286,8 @@ img {
 
 // ===== Cards =====
 .card {
-  background: $bg-card;
-  border: 1px solid $border;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: $radius-md;
   padding: $space-5;
   transition: $transition;
@@ -260,8 +295,8 @@ img {
   cursor: pointer;
 
   &:hover {
-    border-color: $border-strong;
-    box-shadow: $shadow-md, 0 0 0 1px rgba($primary, 0.05);
+    border-color: var(--border-strong);
+    box-shadow: $shadow-md, 0 0 0 1px rgba(var(--primary-rgb), 0.05);
   }
 }
 
@@ -292,13 +327,13 @@ img {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+  background: linear-gradient(135deg, $primary-dark 0%, darken($primary-dark, 6%) 100%);
   color: white;
-  box-shadow: 0 2px 8px rgba($primary, 0.25);
+  box-shadow: 0 2px 8px rgba($primary-dark, 0.25);
 
   &:hover {
-    background: linear-gradient(135deg, $primary-dark 0%, darken($primary-dark, 5%) 100%);
-    box-shadow: 0 4px 12px rgba($primary, 0.35);
+    background: linear-gradient(135deg, darken($primary-dark, 4%) 0%, darken($primary-dark, 10%) 100%);
+    box-shadow: 0 4px 12px rgba($primary-dark, 0.32);
     transform: translateY(-1px);
   }
 
@@ -307,7 +342,7 @@ img {
   }
 
   &:disabled {
-    background: $text-muted;
+    background: var(--text-muted);
     cursor: not-allowed;
     box-shadow: none;
     transform: none;
@@ -315,13 +350,13 @@ img {
 }
 
 .btn-secondary {
-  background: $bg-card;
-  color: $primary;
-  border: 1px solid $border-strong;
+  background: var(--bg-card);
+  color: var(--primary-text);
+  border: 1px solid var(--border-strong);
 
   &:hover {
-    border-color: $primary;
-    background: linear-gradient(135deg, rgba($primary, 0.06) 0%, rgba($primary, 0.02) 100%);
+    border-color: var(--primary);
+    background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.06) 0%, rgba(var(--primary-rgb), 0.02) 100%);
     transform: translateY(-1px);
   }
 
@@ -332,13 +367,13 @@ img {
 
 .btn-ghost {
   background: transparent;
-  color: $text-secondary;
+  color: var(--text-secondary);
   padding: 8px 12px;
   border: none;
 
   &:hover {
-    background: $bg-light;
-    color: $text-primary;
+    background: var(--bg-light);
+    color: var(--text-primary);
   }
 }
 
@@ -351,25 +386,25 @@ img {
     margin-bottom: 6px;
     font-size: $text-sm;
     font-weight: 500;
-    color: $text-secondary;
+    color: var(--text-secondary);
   }
 
   input, textarea {
     width: 100%;
     padding: 11px 14px;
-    border: 1px solid $border-strong;
+    border: 1px solid var(--border-strong);
     border-radius: $radius-sm;
-    background: $bg-card;
+    background: var(--bg-card);
     font-size: $text-base;
-    color: $text-primary;
+    color: var(--text-primary);
 
     &::placeholder {
-      color: $text-muted;
+      color: var(--text-muted);
     }
 
     &:focus {
-      border-color: $primary;
-      box-shadow: 0 0 0 3px rgba($primary, 0.12);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.12);
     }
   }
 
@@ -396,39 +431,39 @@ img {
 }
 
 .fade-in-up {
-  animation: fadeInUp 0.5s $ease-out forwards;
+  animation: fadeInUp 0.24s $ease-out forwards;
 }
 
 // ===== Empty State =====
 .empty-state {
   text-align: center;
   padding: $space-8 $space-5;
-  color: $text-muted;
-  background: linear-gradient(135deg, rgba($primary, 0.02) 0%, transparent 100%);
+  color: var(--text-muted);
+  background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.02) 0%, transparent 100%);
   border-radius: $radius-lg;
-  border: 1px dashed $border;
+  border: 1px dashed var(--border);
 
   .empty-icon {
     width: 56px;
     height: 56px;
     margin: 0 auto $space-4;
     border-radius: 50%;
-    background: linear-gradient(135deg, $primary-soft 0%, rgba($primary, 0.04) 100%);
+    background: linear-gradient(135deg, $primary-soft 0%, rgba(var(--primary-rgb), 0.04) 100%);
     display: grid;
     place-items: center;
-    color: $primary;
+    color: var(--primary);
   }
 
   p {
     font-size: $text-base;
     margin-bottom: $space-4;
-    color: $text-secondary;
+    color: var(--text-secondary);
   }
 }
 
 // ===== Skeleton =====
 .skeleton {
-  background: linear-gradient(90deg, $bg-light 25%, lighten($bg-light, 3%) 50%, $bg-light 75%);
+  background: linear-gradient(90deg, var(--bg-light) 25%, color-mix(in srgb, var(--bg-light) 90%, white) 50%, var(--bg-light) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: $radius-sm;
@@ -443,20 +478,20 @@ img {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: $border-strong;
+  background: var(--border-strong);
   border-radius: $radius-full;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: $text-muted;
+  background: var(--text-muted);
   background-clip: padding-box;
 }
 
 // ===== Selection =====
 ::selection {
-  background: rgba($primary, 0.2);
-  color: $text-primary;
+  background: rgba(var(--primary-rgb), 0.2);
+  color: var(--text-primary);
 }
 
 // ===== Scroll-to-top (hidden by default) =====
@@ -467,9 +502,9 @@ img {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: $bg-card;
-  border: 1px solid $border;
-  color: $text-secondary;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -481,8 +516,8 @@ img {
   z-index: 50;
 
   &:hover {
-    border-color: $primary;
-    color: $primary;
+    border-color: var(--primary);
+    color: var(--primary-text);
     background: $primary-soft;
   }
 
@@ -495,7 +530,7 @@ img {
 
 // ===== Accessibility =====
 :focus-visible {
-  outline: 2px solid $primary;
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 
@@ -524,4 +559,54 @@ img {
       display: none;
     }
   }
+}
+
+// ===== Toast 暖色主题（覆盖 vue-toastification 默认冷色）=====
+// main.js 中先引入库样式、后引入 global.scss，同权重后置即可生效
+.Vue-Toastification__container {
+  font-family: $font-sans;
+}
+
+.Vue-Toastification__toast {
+  min-height: 46px;
+  padding: 12px 16px;
+  border-radius: $radius-md;
+  font-size: $text-sm;
+  box-shadow: $shadow-md;
+}
+
+.Vue-Toastification__toast--default,
+.Vue-Toastification__toast--info {
+  background: #413C37; // 墨色，压白字 10.9:1
+  color: #fff;
+}
+
+.Vue-Toastification__toast--success {
+  background: var(--success); // 压白字 5.85:1
+  color: #fff;
+}
+
+.Vue-Toastification__toast--error {
+  background: var(--error); // 压白字 5.21:1
+  color: #fff;
+}
+
+.Vue-Toastification__toast--warning {
+  background: var(--warning); // 压白字 5.51:1
+  color: #fff;
+}
+
+.Vue-Toastification__close-button {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.Vue-Toastification__progress-bar {
+  background: rgba(255, 255, 255, 0.45);
+  height: 2px;
+}
+
+// 动效收敛：弹入改为淡入，时长对齐 240ms 档
+.Vue-Toastification__fade-enter-active,
+.Vue-Toastification__fade-leave-active {
+  animation-duration: 0.24s;
 }
