@@ -1,151 +1,41 @@
 <template>
   <div class="gallery-page">
-    <header class="gallery-header">
-      <div>
-        <p class="eyebrow">Gallery</p>
-        <h1 class="page-title serif">回忆画廊</h1>
-      </div>
-      <div class="gallery-controls">
-        <div class="search-box">
-          <AppIcon name="search" :size="15" class="search-icon" />
-          <input
-            v-model="keyword"
-            type="search"
-            class="search-input"
-            placeholder="搜索照片、备注、标签…"
-            @input="onKeywordInput"
-          />
-          <button v-if="keyword" class="search-clear" title="清空" @click="clearKeyword">
-            <AppIcon name="close" :size="13" />
-          </button>
-        </div>
-        <div class="filter-group">
-          <AppIcon name="filter" :size="15" class="filter-icon" />
-          <select v-model="filterType" class="filter-select">
-            <option value="">全部类型</option>
-            <option value="PHOTO">照片</option>
-            <option value="VIDEO">视频</option>
-          </select>
-        </div>
-        <select v-model="sortBy" class="filter-select sort-select">
-          <option value="newest">最新优先</option>
-          <option value="oldest">最早优先</option>
-          <option value="name">按文件名</option>
-        </select>
-        <button
-          class="fav-filter"
-          :class="{ active: filterFav }"
-          title="只看收藏"
-          @click="filterFav = !filterFav"
-        >
-          <AppIcon name="heart" :size="15" />
-          收藏
-        </button>
-        <button
-          class="view-toggle"
-          :class="{ active: viewMode === 'grid' }"
-          :title="viewMode === 'masonry' ? '切换网格视图' : '切换瀑布流'"
-          @click="viewMode = viewMode === 'masonry' ? 'grid' : 'masonry'"
-        >
-          <AppIcon name="grid" :size="15" />
-        </button>
-        <button
-          class="batch-toggle"
-          :class="{ active: batchMode }"
-          :title="batchMode ? '取消批量选择' : '批量操作'"
-          @click="toggleBatchMode"
-        >
-          <AppIcon name="check" :size="15" />
-        </button>
-        <router-link to="/upload" class="upload-trigger" title="上传页">
-          <AppIcon name="upload" :size="16" />
-          <span>上传页</span>
-        </router-link>
-        <label class="upload-btn btn btn-primary">
-          <AppIcon name="upload" :size="15" />
-          上传
-          <input type="file" accept="image/*,video/*" multiple @change="handleUpload" hidden />
-        </label>
-        <button
-          class="date-filter-btn"
-          :class="{ active: dateRange.start }"
-          title="日期筛选"
-          @click="showDateFilter = !showDateFilter"
-        >
-          <AppIcon name="calendar" :size="15" />
-        </button>
-      </div>
-
-      <!-- 日期筛选器 -->
-      <transition name="fade">
-        <div v-if="showDateFilter" class="date-filter-bar">
-          <div class="date-inputs">
-            <div class="date-field">
-              <label>开始日期</label>
-              <input v-model="dateRange.start" type="date" class="date-input" @change="onDateChange" />
-            </div>
-            <span class="date-sep">—</span>
-            <div class="date-field">
-              <label>结束日期</label>
-              <input v-model="dateRange.end" type="date" class="date-input" @change="onDateChange" />
-            </div>
-          </div>
-          <button class="date-clear" @click="clearDateFilter">清除</button>
-        </div>
-      </transition>
-
-      <!-- 激活的筛选标签 -->
-      <transition name="fade">
-        <div v-if="hasActiveFilters" class="filter-pills">
-          <span class="pill" v-if="keyword">关键词: {{ keyword }}</span>
-          <span class="pill" v-if="filterType">类型: {{ filterType === 'PHOTO' ? '照片' : '视频' }}</span>
-          <span class="pill" v-if="filterFav">仅收藏</span>
-          <span class="pill" v-if="activeTag">标签: {{ activeTag }}</span>
-          <span class="pill" v-if="dateRange.start">日期: {{ dateRange.start }} ~ {{ dateRange.end || '今' }}</span>
-          <button class="pill-clear" @click="resetFilters">清除全部</button>
-        </div>
-      </transition>
-    </header>
+    <GalleryToolbar
+      v-model:keyword="keyword"
+      v-model:filter-type="filterType"
+      v-model:sort-by="sortBy"
+      v-model:filter-fav="filterFav"
+      v-model:view-mode="viewMode"
+      v-model:batch-mode="batchMode"
+      v-model:show-date-filter="showDateFilter"
+      v-model:date-range="dateRange"
+      :active-tag="activeTag"
+      :has-active-filters="hasActiveFilters"
+      @search-input="onKeywordInput"
+      @clear-keyword="clearKeyword"
+      @toggle-batch="toggleBatchMode"
+      @upload="handleUpload"
+      @date-change="loadMedia"
+      @clear-date="clearDateFilter"
+      @reset="resetFilters"
+    />
 
     <!-- 标签云 -->
-    <section v-if="tags.length" class="tag-cloud">
-      <div class="tag-cloud-head">
-        <span class="tag-cloud-title"><AppIcon name="tag" :size="14" />标签</span>
-        <button class="tag-cloud-toggle" @click="tagsExpanded = !tagsExpanded">
-          {{ tagsExpanded ? '收起' : `展开全部 ${tags.length} 个` }}
-          <AppIcon :name="tagsExpanded ? 'chevronUp' : 'chevronDown'" :size="13" />
-        </button>
-      </div>
-      <div class="tag-list" :class="{ collapsed: !tagsExpanded && tags.length > 12 }">
-        <button
-          v-for="t in visibleTags"
-          :key="t.tag"
-          class="tag-chip"
-          :class="{ active: activeTag === t.tag }"
-          @click="toggleTag(t.tag)"
-        >
-          {{ t.tag }}
-          <span class="tag-count">{{ t.count }}</span>
-        </button>
-      </div>
-    </section>
+    <TagCloud
+      v-model:expanded="tagsExpanded"
+      :tags="tags"
+      :active-tag="activeTag"
+      @toggle-tag="toggleTag"
+    />
 
     <!-- 批量操作栏 -->
-    <transition name="fade">
-      <div v-if="batchMode && selectedIds.size > 0" class="batch-bar">
-        <span class="batch-count">已选 {{ selectedIds.size }} 项</span>
-        <button class="batch-btn" @click="batchFavorite">
-          <AppIcon name="heart" :size="14" />批量收藏
-        </button>
-        <button class="batch-btn" @click="batchDownload">
-          <AppIcon name="download" :size="14" />批量下载
-        </button>
-        <button class="batch-btn danger" @click="batchDelete">
-          <AppIcon name="trash" :size="14" />批量删除
-        </button>
-        <button class="batch-btn ghost" @click="clearSelection">取消选择</button>
-      </div>
-    </transition>
+    <GalleryBatchBar
+      :count="selectedIds.size"
+      @favorite="batchFavorite"
+      @download="batchDownload"
+      @delete="batchDelete"
+      @cancel="clearSelection"
+    />
 
     <!-- 生效的标签筛选提示 -->
     <div v-if="activeTag && !loading" class="result-bar">
@@ -163,66 +53,18 @@
     </div>
 
     <div v-else-if="sortedItems.length" class="masonry-gallery" :class="viewMode">
-      <figure
+      <MediaCard
         v-for="(media, i) in sortedItems"
         :key="media.id"
-        v-reveal="Math.min(i, 12) * 40"
-        v-focusable
-        class="media-card"
-        :class="{ selectable: batchMode, selected: selectedIds.has(media.id) }"
-        @click="batchMode ? toggleSelect(media, $event) : openLightbox(i)"
-      >
-        <div class="card-media">
-          <img
-            :src="mediaStore.getMediaUrl(media.thumbnailPath)"
-            :alt="media.filename"
-            loading="lazy"
-            :data-media-id="media.id"
-            class="card-img"
-            @load="onImageLoad(media.id)"
-          />
-          <div class="img-shimmer" />
-          <video
-            v-if="media.mediaType === 'VIDEO'"
-            :src="mediaStore.getMediaUrl(media.originalPath)"
-            :data-media-id="media.id"
-            muted
-            loop
-            playsinline
-            preload="none"
-            @mouseenter="onVideoHover(media.id, true)"
-            @mouseleave="onVideoHover(media.id, false)"
-            @loadeddata="$event.target.play().catch(() => {})"
-          />
-        </div>
-        <div v-if="batchMode" class="card-check" @click.stop="toggleSelect(media, $event)">
-          <AppIcon v-if="selectedIds.has(media.id)" name="check" :size="14" />
-        </div>
-        <FavoriteButton
-          v-if="!batchMode"
-          v-model="media.isFavorite"
-          :media-id="media.id"
-          variant="card"
-          class="card-fav"
-        />
-        <button v-if="!batchMode" class="card-delete" title="删除" @click.stop="confirmDelete(media)">
-          <AppIcon name="trash" :size="14" />
-        </button>
-        <figcaption class="card-overlay">
-          <span class="type-badge">
-            <AppIcon :name="media.mediaType === 'VIDEO' ? 'film' : 'image'" :size="13" />
-            {{ media.mediaType === 'VIDEO' ? '视频' : '照片' }}
-          </span>
-          <span v-if="media.mediaType === 'VIDEO' && media.duration" class="video-duration">
-            {{ formatDuration(media.duration) }}
-          </span>
-          <span class="date-label">{{ formatDate(media.takenAt) }}</span>
-        </figcaption>
-        <div v-if="viewMode === 'grid'" class="grid-info">
-          <p class="grid-filename">{{ media.filename }}</p>
-          <p class="grid-date">{{ formatDate(media.takenAt) }}</p>
-        </div>
-      </figure>
+        :media="media"
+        :index="i"
+        :batch-mode="batchMode"
+        :selected="selectedIds.has(media.id)"
+        :view-mode="viewMode"
+        @open="openLightbox"
+        @toggle-select="toggleSelect"
+        @delete="confirmDelete"
+      />
     </div>
 
     <!-- 无限滚动哨兵 -->
@@ -261,15 +103,18 @@
 </template>
 
 <script setup>
-import { ref, shallowRef, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useMediaStore } from '@/stores/media'
 import { mediaApi, notesApi } from '@/api'
 import { useToast } from 'vue-toastification'
 import AppIcon from '@/components/AppIcon.vue'
 import Lightbox from '@/components/Lightbox.vue'
-import FavoriteButton from '@/components/FavoriteButton.vue'
 import SkeletonCard from '@/components/SkeletonCard.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import GalleryToolbar from './gallery/GalleryToolbar.vue'
+import TagCloud from './gallery/TagCloud.vue'
+import GalleryBatchBar from './gallery/GalleryBatchBar.vue'
+import MediaCard from './gallery/MediaCard.vue'
 
 const mediaStore = useMediaStore()
 const toast = useToast()
@@ -292,13 +137,9 @@ const deleteDialogOpen = ref(false)
 const deleteTarget = ref(null)
 const batchMode = ref(false)
 const selectedIds = ref(new Set())
-// 完全移出响应式系统，使用普通 Map 避免任何响应式追踪
-const videoHovering = new Map() // mediaId -> boolean
-const imageLoaded = new Map() // mediaId -> boolean
 const hasMore = ref(true)
 const scrollSentinel = ref(null)
 let observer = null
-const sortBy = ref('newest')
 let debounceTimer = null
 let rafId = null
 
@@ -306,54 +147,27 @@ const hasActiveFilters = computed(() => {
   return !!(keyword.value || filterType.value || filterFav.value || activeTag.value || dateRange.value.start)
 })
 
-function onCardMouseMove(e, el) {
-  if (batchMode.value) return
-
-  // 使用 requestAnimationFrame 节流，避免频繁更新 transform
-  if (rafId) return
-
-  rafId = requestAnimationFrame(() => {
-    const rect = el.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    const centerX = rect.width / 2
-    const centerY = rect.height / 2
-    // 从 CSS 变量读取参数，便于统一调整
-    const tiltAngle = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tilt-angle')) || 1.5
-    const tiltLift = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tilt-lift')) || -4
-    const perspective = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--perspective')) || 800
-
-    const rotateX = ((y - centerY) / centerY) * -tiltAngle
-    const rotateY = ((x - centerX) / centerX) * tiltAngle
-    el.style.transform = `perspective(${perspective}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(${tiltLift}px)`
-    rafId = null
-  })
-}
-
-// 全局鼠标跟踪：处理鼠标在卡片间移动的情况
+// ===== 卡片 3D 倾斜（全局事件委托，作用于 .media-card）=====
 let lastHoveredCard = null
-let isTrackingInitialized = false // 防止重复初始化
+let isTrackingInitialized = false
 
-// 缓存 CSS 变量，避免在 mousemove 中频繁调用 getComputedStyle
 const tiltConfig = {
   angle: 1.5,
   lift: -4,
-  perspective: 800
+  perspective: 800,
 }
 
-// 读取并缓存 CSS 变量值
 function updateTiltConfig() {
   try {
     const style = getComputedStyle(document.documentElement)
     tiltConfig.angle = parseFloat(style.getPropertyValue('--tilt-angle')) || 1.5
     tiltConfig.lift = parseFloat(style.getPropertyValue('--tilt-lift')) || -4
     tiltConfig.perspective = parseFloat(style.getPropertyValue('--perspective')) || 800
-  } catch (e) {
+  } catch {
     // 使用默认值
   }
 }
 
-// 应用 3D 倾斜效果（带边界检查）
 function applyTiltEffect(card, e) {
   const rect = card.getBoundingClientRect()
 
@@ -379,35 +193,25 @@ function applyTiltEffect(card, e) {
 function handleGlobalMouseMove(e) {
   if (batchMode.value) return
 
-  // 快速检查：如果鼠标不在画廊内，直接返回
   const gallery = document.querySelector('.masonry-gallery')
   if (!gallery || !gallery.contains(e.target)) return
 
-  // 查找鼠标下方的 .media-card 元素
   const card = e.target.closest('.media-card')
-
-  // 只在鼠标真正在一个卡片上时，才应用 3D 效果
   if (card) {
-    // 节流处理：避免在同一帧内多次更新
     if (rafId) return
-
     rafId = requestAnimationFrame(() => {
       applyTiltEffect(card, e)
       lastHoveredCard = card
       rafId = null
     })
   }
-  // 当鼠标在间隙中时（card === null），不执行任何操作
-  // 保持上一个卡片的 3D 效果，或者不应用任何效果
 }
 
 function handleGlobalMouseLeave() {
   if (lastHoveredCard) {
-    // 添加平滑过渡类
     lastHoveredCard.classList.add('media-card--resetting')
     lastHoveredCard.style.transform = ''
 
-    // 移除过渡类（延迟 300ms，与 CSS transition 匹配）
     setTimeout(() => {
       lastHoveredCard?.classList.remove('media-card--resetting')
     }, 300)
@@ -420,49 +224,31 @@ function handleGlobalMouseLeave() {
   }
 }
 
-// 设置全局鼠标跟踪
 let mouseTracker = null
 let initRetries = 0
 const MAX_INIT_RETRIES = 5
 
 function setupGlobalMouseTracking() {
-  // 防止重复初始化
-  if (isTrackingInitialized) {
-    console.log('⚠️ Mouse tracking already initialized, skipping')
-    return
-  }
+  if (isTrackingInitialized) return
 
   const gallery = document.querySelector('.masonry-gallery')
   if (!gallery) {
-    console.warn('❌ Gallery element not found for mouse tracking')
-
     // 重试机制：DOM 可能还未完全渲染
     if (initRetries < MAX_INIT_RETRIES) {
       initRetries++
-      console.log(`⏳ Retrying initialization (${initRetries}/${MAX_INIT_RETRIES})...`)
       setTimeout(() => {
         setupGlobalMouseTracking()
       }, 200)
-    } else {
-      console.error('❌ Failed to initialize mouse tracking after maximum retries')
     }
     return
   }
 
-  // 找到画廊元素，重置重试计数
   initRetries = 0
-
   mouseTracker = (e) => handleGlobalMouseMove(e)
-  const leaveTracker = () => handleGlobalMouseLeave()
-
-  // 缓存 CSS 变量值
   updateTiltConfig()
-
   gallery.addEventListener('mousemove', mouseTracker)
-  gallery.addEventListener('mouseleave', leaveTracker)
+  gallery.addEventListener('mouseleave', handleGlobalMouseLeave)
   isTrackingInitialized = true
-  console.log('✅ Global mouse tracking initialized on', gallery)
-  console.log('📐 Tilt config:', tiltConfig)
 }
 
 function cleanupGlobalMouseTracking() {
@@ -471,7 +257,6 @@ function cleanupGlobalMouseTracking() {
     if (gallery) {
       gallery.removeEventListener('mousemove', mouseTracker)
       gallery.removeEventListener('mouseleave', handleGlobalMouseLeave)
-      console.log('🧹 Global mouse tracking cleaned up')
     }
     mouseTracker = null
     isTrackingInitialized = false
@@ -479,9 +264,7 @@ function cleanupGlobalMouseTracking() {
   }
 }
 
-// 鼠标离开时的平滑过渡类
-const RESET_TRANSITION_DURATION = 300
-
+// 视图偏好持久化
 try {
   const saved = JSON.parse(localStorage.getItem('gallery-prefs') || '{}')
   if (saved.viewMode) viewMode.value = saved.viewMode
@@ -498,9 +281,6 @@ watch([viewMode, sortBy], () => {
   }))
 })
 
-// 标签云默认展示前 12 个，展开后全部
-const visibleTags = computed(() => (tagsExpanded.value ? tags.value : tags.value.slice(0, 12)))
-
 // 排序后的媒体列表
 const sortedItems = computed(() => {
   const list = [...items.value]
@@ -515,11 +295,9 @@ const sortedItems = computed(() => {
   }
 })
 
-// 监听 sortedItems 变化，当画廊从无到有时重新初始化
+// 画廊从无到有时重新初始化鼠标跟踪
 watch(sortedItems, (newItems, oldItems) => {
   if (newItems.length > 0 && (!oldItems || oldItems.length === 0)) {
-    // 画廊元素刚被创建
-    console.log('Gallery element created, initializing mouse tracking...')
     setTimeout(() => {
       setupGlobalMouseTracking()
     }, 100)
@@ -531,7 +309,6 @@ onMounted(async () => {
   loadTags()
   await nextTick()
   setupInfiniteScroll()
-  // 首次渲染
   setTimeout(() => {
     setupGlobalMouseTracking()
   }, 100)
@@ -587,11 +364,6 @@ function clearKeyword() {
   loadMedia()
 }
 
-function onDateChange() {
-  showDateFilter.value = false
-  loadMedia()
-}
-
 function clearDateFilter() {
   dateRange.value = { start: '', end: '' }
   loadMedia()
@@ -630,10 +402,6 @@ async function loadMedia(reset = true) {
     }
     total.value = data.total
     hasMore.value = items.value.length < total.value
-
-    // 注意：不在这里初始化鼠标跟踪
-    // 因为此时 loading 可能还为 true，.masonry-gallery 元素可能还未渲染
-    // 而是在 onMounted 中统一初始化（在 loading = false 之后）
   } catch {
     toast.error('加载失败')
   } finally {
@@ -733,43 +501,6 @@ function confirmDelete(media) {
   deleteDialogOpen.value = true
 }
 
-function onVideoHover(mediaId, entering) {
-  // 完全非响应式，不触发任何Vue更新
-  videoHovering.set(mediaId, entering)
-
-  // 直接操作 DOM，零延迟
-  const video = document.querySelector(`video[data-media-id="${mediaId}"]`)
-  if (video) {
-    if (entering) {
-      video.classList.add('visible')
-      // 隐藏对应图片
-      const img = video.parentElement?.querySelector('img')
-      if (img) img.classList.add('hidden')
-    } else {
-      video.classList.remove('visible')
-      // 显示对应图片
-      const img = video.parentElement?.querySelector('img')
-      if (img) img.classList.remove('hidden')
-    }
-  }
-}
-
-function onImageLoad(mediaId) {
-  // 完全非响应式，不触发任何Vue更新
-  imageLoaded.set(mediaId, true)
-
-  // 手动更新 DOM，不依赖 Vue 重新渲染
-  const img = document.querySelector(`img[data-media-id="${mediaId}"]`)
-  if (img) {
-    img.classList.add('loaded')
-    // 移除 shimmer
-    const shimmer = img.parentElement?.querySelector('.img-shimmer')
-    if (shimmer) {
-      shimmer.remove()
-    }
-  }
-}
-
 async function executeDelete() {
   if (!deleteTarget.value) return
   try {
@@ -782,19 +513,6 @@ async function executeDelete() {
     deleteTarget.value = null
   }
 }
-
-function formatDate(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
-}
-
-function formatDuration(seconds) {
-  if (!seconds || seconds <= 0) return ''
-  const m = Math.floor(seconds / 60)
-  const s = Math.floor(seconds % 60)
-  return `${m}:${String(s).padStart(2, '0')}`
-}
 </script>
 
 <style scoped lang="scss">
@@ -802,127 +520,6 @@ function formatDuration(seconds) {
   max-width: 1280px;
   margin: 0 auto;
   padding: $space-6 $space-5 $space-8;
-}
-
-.gallery-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: $space-6;
-  flex-wrap: wrap;
-  gap: $space-4;
-  padding: $space-5;
-  background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.03) 0%, rgba(var(--primary-rgb), 0.01) 100%);
-  border-radius: $radius-lg;
-  border: 1px solid var(--border);
-}
-
-.eyebrow {
-  font-size: $text-xs;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: $space-1;
-}
-
-.page-title {
-  font-size: $text-3xl;
-  font-weight: 600;
-}
-
-.gallery-controls {
-  display: flex;
-  gap: $space-3;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.upload-trigger {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 16px;
-  border-radius: $radius-full;
-  background: var(--primary);
-  color: #fff;
-  font-size: $text-sm;
-  font-weight: 500;
-  text-decoration: none;
-  transition: $transition;
-  box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.25);
-
-  &:hover {
-    background: $primary-dark;
-    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.35);
-    transform: translateY(-1px);
-  }
-}
-
-/* ===== 搜索框 ===== */
-.search-box {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.search-icon {
-  position: absolute;
-  left: 14px;
-  color: var(--text-muted);
-  pointer-events: none;
-}
-
-.search-input {
-  width: 220px;
-  padding: 9px 34px 9px 36px;
-  border: 1px solid var(--border);
-  border-radius: $radius-full;
-  background: var(--bg-card);
-  color: var(--text-primary);
-  font-size: $text-sm;
-  font-family: inherit;
-  transition: $transition-fast;
-  appearance: none;
-
-  &::placeholder {
-    color: var(--text-muted);
-  }
-
-  &:hover {
-    border-color: var(--border-strong);
-  }
-
-  &:focus {
-    outline: none;
-    border-color: var(--primary);
-    width: 260px;
-  }
-
-  /* 去掉浏览器原生 search 的清除按钮（用我们自己的） */
-  &::-webkit-search-cancel-button {
-    display: none;
-  }
-}
-
-.search-clear {
-  position: absolute;
-  right: 10px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border: none;
-  border-radius: $radius-full;
-  background: var(--bg-light);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: $transition-fast;
-
-  &:hover {
-    background: var(--border-strong);
-    color: var(--text-primary);
-  }
 }
 
 /* ===== 搜索结果提示 ===== */
@@ -955,358 +552,6 @@ function formatDuration(seconds) {
   &:hover {
     color: $primary-dark;
   }
-}
-
-/* ===== 标签云 ===== */
-.tag-cloud {
-  margin-bottom: $space-5;
-  padding: $space-4 $space-5;
-  background: linear-gradient(135deg, var(--bg-card) 0%, rgba(var(--primary-rgb), 0.024) 100%);
-  border: 1px solid var(--border);
-  border-radius: $radius-md;
-  box-shadow: $shadow-sm;
-}
-
-.tag-cloud-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: $space-3;
-}
-
-.tag-cloud-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: $text-sm;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.tag-cloud-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  border: none;
-  background: none;
-  color: var(--text-muted);
-  font-size: $text-xs;
-  font-family: inherit;
-  cursor: pointer;
-  transition: $transition-fast;
-
-  &:hover {
-    color: var(--primary);
-  }
-}
-
-.tag-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $space-2;
-
-  /* 未展开时限制高度，超出渐隐 */
-  &.collapsed {
-    max-height: 68px;
-    overflow: hidden;
-    mask-image: linear-gradient(180deg, #000 60%, transparent);
-  }
-}
-
-.tag-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px $space-3;
-  border: 1px solid var(--border);
-  border-radius: $radius-full;
-  background: var(--bg-warm);
-  color: var(--text-secondary);
-  font-size: $text-sm;
-  font-family: inherit;
-  cursor: pointer;
-  transition: $transition-fast;
-
-  &:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-    background: $primary-soft;
-  }
-
-  &.active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #fff;
-  }
-}
-
-.tag-count {
-  font-size: $text-xs;
-  opacity: 0.6;
-  font-variant-numeric: tabular-nums;
-}
-
-.filter-group {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.filter-icon {
-  position: absolute;
-  left: 14px;
-  color: var(--text-muted);
-  pointer-events: none;
-}
-
-.filter-select {
-  appearance: none;
-  padding: 9px $space-4 9px 36px;
-  border: 1px solid var(--border);
-  border-radius: $radius-full;
-  background: var(--bg-card);
-  color: var(--text-primary);
-  font-size: $text-sm;
-  font-family: inherit;
-  cursor: pointer;
-  transition: $transition-fast;
-
-  &:hover {
-    border-color: var(--border-strong);
-  }
-
-  &:focus {
-    outline: none;
-    border-color: var(--primary);
-  }
-}
-
-.sort-select {
-  padding-left: $space-3;
-  appearance: auto;
-}
-
-/* 只看收藏筛选 */
-.fav-filter {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px $space-4;
-  border: 1px solid var(--border);
-  border-radius: $radius-full;
-  background: var(--bg-card);
-  color: var(--text-secondary);
-  font-size: $text-sm;
-  font-family: inherit;
-  cursor: pointer;
-  transition: $transition-fast;
-
-  &:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-  }
-
-  &.active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #fff;
-
-    :deep(.app-icon path) {
-      fill: currentColor;
-    }
-  }
-}
-
-/* 视图切换 */
-.view-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  border: 1px solid var(--border);
-  border-radius: $radius-full;
-  background: var(--bg-card);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: $transition-fast;
-
-  &:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-    background: $primary-soft;
-  }
-
-  &.active {
-    background: $primary-soft;
-    border-color: var(--primary);
-    color: var(--primary);
-  }
-}
-
-/* 卡片删除按钮 */
-.card-delete {
-  position: absolute;
-  top: $space-2;
-  right: $space-2;
-  z-index: 3;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(45, 42, 38, 0.7);
-  backdrop-filter: blur(4px);
-  color: #fff;
-  display: grid;
-  place-items: center;
-  opacity: 0;
-  transition: $transition-fast;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-
-  &:hover {
-    background: var(--error);
-  }
-
-  .media-card:hover & {
-    opacity: 1;
-  }
-}
-
-/* 收藏 + 删除按钮并排 */
-.card-fav {
-  position: absolute;
-  top: $space-2;
-  right: $space-2;
-  z-index: 2;
-  opacity: 0;
-  transition: $transition-fast;
-
-  .media-card:hover &,
-  &.filled {
-    opacity: 1;
-  }
-
-  /* 删除按钮出现时，收藏按钮左移 */
-  .media-card:hover .card-delete ~ &,
-  &.filled {
-    right: 38px;
-  }
-}
-
-/* ===== 批量选择模式 ===== */
-.card-check {
-  position: absolute;
-  top: $space-2;
-  left: $space-2;
-  z-index: 4;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.7);
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(4px);
-  color: #fff;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: $transition-fast;
-  padding: 0;
-
-  &:hover {
-    border-color: #fff;
-    background: rgba(0, 0, 0, 0.5);
-  }
-}
-
-.media-card.selectable {
-  cursor: pointer;
-
-  &:hover {
-    transform: translateY(-2px);
-
-    img {
-      transform: none;
-    }
-  }
-
-  &.selected {
-    outline: 2px solid var(--primary);
-    outline-offset: -2px;
-
-    .card-check {
-      background: var(--primary);
-      border-color: var(--primary);
-    }
-  }
-}
-
-/* 批量操作栏 */
-.batch-bar {
-  display: flex;
-  align-items: center;
-  gap: $space-3;
-  padding: $space-3 $space-4;
-  background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.08) 0%, rgba(var(--primary-rgb), 0.04) 100%);
-  border: 1px solid rgba(var(--primary-rgb), 0.2);
-  border-radius: $radius-md;
-  margin-bottom: $space-4;
-  box-shadow: $shadow-sm;
-
-  .batch-count {
-    font-weight: 600;
-    color: var(--primary);
-    margin-right: $space-2;
-  }
-
-  .batch-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 7px $space-3;
-    border: 1px solid var(--border);
-    border-radius: $radius-sm;
-    background: var(--bg-card);
-    color: var(--text-secondary);
-    font-size: $text-sm;
-    font-family: inherit;
-    cursor: pointer;
-    transition: $transition-fast;
-
-    &:hover {
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-
-    &.danger {
-      color: var(--error);
-      border-color: rgba(var(--error-rgb), 0.3);
-
-      &:hover {
-        background: rgba(var(--error-rgb), 0.08);
-        border-color: var(--error);
-      }
-    }
-
-    &.ghost {
-      background: none;
-      border-color: transparent;
-      color: var(--text-muted);
-
-      &:hover {
-        color: var(--text-primary);
-      }
-    }
-  }
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
 }
 
 /* 无限滚动哨兵 */
@@ -1348,198 +593,7 @@ function formatDuration(seconds) {
     @media (max-width: 480px) {
       grid-template-columns: 1fr;
     }
-
-    .media-card {
-      break-inside: auto;
-      display: flex;
-      align-items: center;
-      gap: $space-4;
-      overflow: hidden;
-
-      img {
-        width: 140px;
-        height: 140px;
-        flex-shrink: 0;
-        object-fit: cover;
-        border-radius: $radius-sm 0 0 $radius-sm;
-      }
-
-      .card-fav {
-        opacity: 1;
-      }
-
-      .card-overlay {
-        display: none;
-      }
-    }
   }
-}
-
-.grid-info {
-  flex: 1;
-  min-width: 0;
-  padding: $space-3 $space-4 $space-3 0;
-
-  .grid-filename {
-    font-size: $text-sm;
-    font-weight: 500;
-    color: var(--text-primary);
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .grid-date {
-    font-size: $text-xs;
-    color: var(--text-muted);
-    letter-spacing: 0.04em;
-  }
-}
-
-.media-card {
-  break-inside: avoid;
-  margin-bottom: $space-4;
-  border-radius: $radius-md;
-  overflow: hidden;
-  cursor: pointer;
-  position: relative;
-  background: var(--bg-light);
-  border: 1px solid var(--border);
-  transform-style: preserve-3d;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  // 启用 GPU 加速
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  will-change: transform;
-
-  &:hover {
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
-    border-color: var(--border-strong);
-
-    .card-overlay {
-      opacity: 1;
-    }
-  }
-
-  img {
-    width: 100%;
-    display: block;
-    transition: opacity 0.2s;
-    will-change: opacity;
-  }
-
-  &.selected {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px $primary-soft, 0 8px 24px rgba(0, 0, 0, 0.1);
-  }
-
-  // 平滑过渡：鼠标离开时
-  &--resetting {
-    transition: transform 0.3s ease-in !important;
-  }
-}
-
-/* 尊重用户的减少动画偏好 */
-@media (prefers-reduced-motion: reduce) {
-  .media-card {
-    transform: none !important;
-    transition: box-shadow 0.2s ease, border-color 0.2s ease !important;
-
-    img {
-      transition: opacity 0.2s !important;
-    }
-
-    &:hover img {
-      transform: none !important;
-    }
-  }
-}
-
-/* ===== 视频悬浮预览 ===== */
-.card-media {
-  position: relative;
-  overflow: hidden;
-
-  .card-img {
-    filter: blur(8px);
-    transition: filter 0.4s ease, opacity 0.25s;
-    will-change: filter, opacity;
-
-    &.loaded {
-      filter: blur(0);
-    }
-
-    &.hidden {
-      opacity: 0;
-    }
-  }
-
-  .img-shimmer {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, var(--bg-light) 25%, color-mix(in srgb, var(--bg-light) 93%, white) 50%, var(--bg-light) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  video {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s;
-    z-index: 2;
-
-    &.visible {
-      opacity: 1;
-    }
-  }
-
-  img.hidden {
-    opacity: 0;
-  }
-}
-
-.card-overlay {
-  position: absolute;
-  inset: auto 0 0 0;
-  padding: $space-5 $space-3 $space-2;
-  background: linear-gradient(transparent, rgba(28, 25, 22, 0.62));
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #fff;
-  font-size: $text-xs;
-  opacity: 0;
-  transition: $transition;
-}
-
-.type-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.video-duration {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  background: rgba(0, 0, 0, 0.55);
-  border-radius: 4px;
-  font-size: $text-xs;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
-}
-
-.date-label {
-  letter-spacing: 0.04em;
-  opacity: 0.9;
 }
 
 .loading-grid {
@@ -1567,155 +621,6 @@ function formatDuration(seconds) {
   color: var(--text-muted);
 }
 
-/* ===== 日期筛选器 ===== */
-.date-filter-bar {
-  display: flex;
-  align-items: center;
-  gap: $space-3;
-  padding: $space-3 $space-4;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: $radius-md;
-  margin-bottom: $space-4;
-  animation: fade-up 0.3s ease;
-}
-
-.date-inputs {
-  display: flex;
-  align-items: center;
-  gap: $space-3;
-  flex: 1;
-}
-
-.date-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-
-  label {
-    font-size: $text-xs;
-    color: var(--text-muted);
-  }
-}
-
-.date-input {
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: $radius-sm;
-  background: var(--bg-warm);
-  color: var(--text-primary);
-  font-family: inherit;
-  font-size: $text-sm;
-
-  &:focus {
-    outline: none;
-    border-color: var(--primary);
-  }
-}
-
-.date-sep {
-  color: var(--text-muted);
-  margin-top: 16px;
-}
-
-.date-clear {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-size: $text-sm;
-  padding: 4px 8px;
-
-  &:hover {
-    color: var(--error);
-  }
-}
-
-/* ===== 筛选标签 ===== */
-.filter-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $space-2;
-  align-items: center;
-  padding: $space-3 0;
-  animation: fade-up 0.3s ease;
-}
-
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px $space-3;
-  background: $primary-soft;
-  color: var(--primary);
-  border-radius: $radius-full;
-  font-size: $text-xs;
-  font-weight: 500;
-}
-
-.pill-clear {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-size: $text-xs;
-  padding: 4px 8px;
-
-  &:hover {
-    color: var(--error);
-  }
-}
-
-/* ===== 响应式优化 ===== */
-@media (max-width: 768px) {
-  .gallery-controls {
-    gap: $space-2;
-  }
-
-  .search-input {
-    width: 100%;
-    max-width: none;
-
-    &:focus {
-      width: 100%;
-    }
-  }
-
-  .filter-select,
-  .sort-select {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .upload-trigger span {
-    display: none;
-  }
-}
-
-@media (max-width: 640px) {
-  .gallery-header {
-    flex-direction: column;
-    gap: $space-3;
-  }
-
-  .gallery-controls {
-    width: 100%;
-  }
-
-  .date-filter-bar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .date-inputs {
-    flex-direction: column;
-  }
-
-  .date-sep {
-    display: none;
-  }
-}
-
 /* ===== 性能优化：减少动画偏好 ===== */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -1725,11 +630,5 @@ function formatDuration(seconds) {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-}
-
-/* ===== 图片加载优化 ===== */
-img {
-  content-visibility: auto;
-  contain-intrinsic-size: 300px;
 }
 </style>

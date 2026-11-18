@@ -1,4 +1,5 @@
 @use 'variables' as *;
+@use 'sass:color';
 
 // ===== Reset & Base =====
 *,
@@ -327,12 +328,12 @@ img {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, $primary-dark 0%, darken($primary-dark, 6%) 100%);
+  background: linear-gradient(135deg, $primary-dark 0%, color.adjust($primary-dark, $lightness: -6%) 100%);
   color: white;
   box-shadow: 0 2px 8px rgba($primary-dark, 0.25);
 
   &:hover {
-    background: linear-gradient(135deg, darken($primary-dark, 4%) 0%, darken($primary-dark, 10%) 100%);
+    background: linear-gradient(135deg, color.adjust($primary-dark, $lightness: -4%) 0%, color.adjust($primary-dark, $lightness: -10%) 100%);
     box-shadow: 0 4px 12px rgba($primary-dark, 0.32);
     transform: translateY(-1px);
   }
